@@ -3,12 +3,15 @@
 #include "kernel_sched.h"
 #include "kernel_proc.h"
 
-/** 
+/**
   @brief Create a new thread in the current process.
   */
 Tid_t sys_CreateThread(Task task, int argl, void* args)
 {
-	return NOTHREAD;
+	PTCB* ptcb = acquire_PTCB();
+	rlist_push_back(&CURPROC->ptcbs, &ptcb->list_node);
+	ptcb->main_thread = spawn_thread(CURPROC, start_thread);
+
 }
 
 /**
@@ -42,4 +45,3 @@ void sys_ThreadExit(int exitval)
 {
 
 }
-

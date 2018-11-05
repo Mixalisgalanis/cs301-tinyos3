@@ -13,7 +13,7 @@
   process access.
 
   @{
-*/ 
+*/
 
 #include "tinyos.h"
 #include "kernel_sched.h"
@@ -41,7 +41,7 @@ typedef struct process_control_block {
   PCB* parent;            /**< Parent's pcb. */
   int exitval;            /**< The exit value */
 
-  TCB* main_thread;       /**< The main thread */
+  rlnode ptcbs; /**< The main process thread */
   Task main_task;         /**< The main thread's function */
   int argl;               /**< The main thread's argument length */
   void* args;             /**< The main thread's argument string */
@@ -57,6 +57,35 @@ typedef struct process_control_block {
 
 } PCB;
 
+/**
+  @brief Process-Thread Control Block.
+
+  This structure holds all information pertaining to a process-thread.
+ */
+ typedef struct process_thread_control_block {
+     rlnode list_node;
+     Task task;
+
+     TCB* main_thread;       /**< The main thread */
+
+     struct process_thread_control_block * prev;  /**< previous context */
+     struct process_thread_control_block * next;  /**< next context */
+
+     int argl;
+     void* args;
+
+     int exitval;
+     int exited; //Boolean
+
+     int detached; //Boolean
+     CondVar cv_joined;
+     int ref_count;
+
+ } PTCB;
+
+
+
+
 
 /**
   @brief Initialize the process table.
@@ -69,11 +98,11 @@ void initialize_processes();
 /**
   @brief Get the PCB for a PID.
 
-  This function will return a pointer to the PCB of 
+  This function will return a pointer to the PCB of
   the process with a given PID. If the PID does not
   correspond to a process, the function returns @c NULL.
 
-  @param pid the pid of the process 
+  @param pid the pid of the process
   @returns A pointer to the PCB of the process, or NULL.
 */
 PCB* get_pcb(Pid_t pid);
@@ -81,11 +110,11 @@ PCB* get_pcb(Pid_t pid);
 /**
   @brief Get the PID of a PCB.
 
-  This function will return the PID of the process 
+  This function will return the PID of the process
   whose PCB is pointed at by @c pcb. If the pcb does not
   correspond to a process, the function returns @c NOPROC.
 
-  @param pcb the pcb of the process 
+  @param pcb the pcb of the process
   @returns the PID of the process, or NOPROC.
 */
 Pid_t get_pid(PCB* pcb);

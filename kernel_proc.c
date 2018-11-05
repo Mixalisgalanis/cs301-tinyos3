@@ -5,7 +5,7 @@
 #include "kernel_streams.h"
 
 
-/* 
+/*
  The process table and related system calls:
  - Exec
  - Exit
@@ -18,6 +18,7 @@
 /* The process table */
 PCB PT[MAX_PROC];
 unsigned int process_count;
+unsigned int ptcb_count;
 
 PCB* get_pcb(Pid_t pid)
 {
@@ -48,6 +49,7 @@ static inline void initialize_PCB(PCB* pcb)
 
 
 static PCB* pcb_freelist;
+static PTCB* ptcb_freelist;
 
 void initialize_processes()
 {
@@ -88,6 +90,19 @@ PCB* acquire_PCB()
   }
 
   return pcb;
+}
+
+PCTB* acquire_PTCB(){
+    PTCB* ptcb = NULL;
+
+    /*if(ptcb_freelist != NULL) {
+      ptcb = ptcb_freelist;
+      ptcb->pstate = ALIVE;
+      ptcb_freelist = ptcb_freelist->parent;
+      process_count++;
+  }*/
+
+    return ptcb;
 }
 
 /*
@@ -131,14 +146,14 @@ void start_main_thread()
 Pid_t sys_Exec(Task call, int argl, void* args)
 {
   PCB *curproc, *newproc;
-  
+
   /* The new process PCB */
   newproc = acquire_PCB();
 
   if(newproc == NULL) goto finish;  /* We have run out of PIDs! */
 
   if(get_pid(newproc)<=1) {
-    /* Processes with pid<=1 (the scheduler and the init process) 
+    /* Processes with pid<=1 (the scheduler and the init process)
        are parentless and are treated specially. */
     newproc->parent = NULL;
   }
@@ -172,14 +187,14 @@ Pid_t sys_Exec(Task call, int argl, void* args)
   else
     newproc->args=NULL;
 
-  /* 
+  /*
     Create and wake up the thread for the main function. This must be the last thing
     we do, because once we wakeup the new thread it may run! so we need to have finished
     the initialization of the PCB.
    */
   if(call != NULL) {
-    newproc->main_thread = spawn_thread(newproc, start_main_thread);
-    wakeup(newproc->main_thread);
+    newproc->main_process_thread->main_thread = spawn_thread(newproc, start_main_thread);
+    wakeup(newproc->main_process_thread->main_thread);
   }
 
 
@@ -233,9 +248,9 @@ static Pid_t wait_for_specific_child(Pid_t cpid, int* status)
   /* Ok, child is a legal child of mine. Wait for it to exit. */
   while(child->pstate == ALIVE)
     kernel_wait(& parent->child_exit, SCHED_USER);
-  
+
   cleanup_zombie(child, status);
-  
+
 finish:
   return cpid;
 }
@@ -283,7 +298,7 @@ Pid_t sys_WaitChild(Pid_t cpid, int* status)
 
 void sys_Exit(int exitval)
 {
-  /* Right here, we must check that we are not the boot task. If we are, 
+  /* Right here, we must check that we are not the boot task. If we are,
      we must wait until all processes exit. */
   if(sys_GetPid()==1) {
     while(sys_WaitChild(NOPROC,NULL)!=NOPROC);
@@ -305,7 +320,7 @@ void sys_Exit(int exitval)
     }
   }
 
-  /* Reparent any children of the exiting process to the 
+  /* Reparent any children of the exiting process to the
      initial task */
   PCB* initpcb = get_pcb(1);
   while(!is_rlist_empty(& curproc->children_list)) {
@@ -314,7 +329,7 @@ void sys_Exit(int exitval)
     rlist_push_front(& initpcb->children_list, child);
   }
 
-  /* Add exited children to the initial task's exited list 
+  /* Add exited children to the initial task's exited list
      and signal the initial task */
   if(!is_rlist_empty(& curproc->exited_list)) {
     rlist_append(& initpcb->exited_list, &curproc->exited_list);
@@ -328,7 +343,7 @@ void sys_Exit(int exitval)
   }
 
   /* Disconnect my main_thread */
-  curproc->main_thread = NULL;
+  curproc->main_process_thread->main_thread = NULL;
 
   /* Now, mark the process as exited. */
   curproc->pstate = ZOMBIE;
@@ -344,4 +359,3 @@ Fid_t sys_OpenInfo()
 {
 	return NOFILE;
 }
-
