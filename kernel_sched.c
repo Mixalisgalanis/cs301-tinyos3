@@ -176,7 +176,7 @@ CCB cctx[MAX_CORES];
    Both of these structures are protected by @c sched_spinlock.
  */
 
-int ageCounter = 0; /* Counts number of times the yield() function is called*/
+int ageCounter; /* Counts number of times the yield() function is called*/
 rlnode SCHED[NUMBER_OF_QUEUES];    /* The scheduler queue */
 rlnode TIMEOUT_LIST;               /* The list of threads with a timeout */
 Mutex sched_spinlock = MUTEX_INIT; /* spinlock for scheduler queue */
@@ -217,6 +217,7 @@ static void sched_register_timeout(TCB *tcb, TimerDuration timeout) {
  *** MUST BE CALLED WITH sched_spinlock HELD ***
  */
 static void sched_queue_add(TCB *tcb) {
+assert((tcb->priority >=0) && (tcb->priority <=9));
   /* Insert at the end of the scheduling list */
   rlist_push_back(&SCHED[tcb->priority], &tcb->sched_node);
 
@@ -268,9 +269,11 @@ static TCB *sched_queue_select() {
   rlnode *sel;
   /* Get the head of the SCHED list */
   for (int i = 0; i < NUMBER_OF_QUEUES; i++) {
-    if (is_rlist_empty(&SCHED[i]))
-      continue;
-    sel = rlist_pop_front(&SCHED[i]);
+    if (!is_rlist_empty(&SCHED[i])) {
+       sel = rlist_pop_front(&SCHED[i]);
+       break;
+    }
+
   }
 
   return sel->tcb; /* When the list is empty, this is NULL */
@@ -289,6 +292,10 @@ static void sched_queue_evaluate(enum SCHED_CAUSE cause) {
   case SCHED_IO:
     if (CURTHREAD->priority > 0)
       --CURTHREAD->priority;
+    break;
+    case SCHED_MUTEX:
+    if (CURTHREAD->priority < NUMBER_OF_QUEUES - 1)
+      ++CURTHREAD->priority;
     break;
   default:
     break;
@@ -374,12 +381,7 @@ void sleep_releasing(Thread_state state, Mutex *mx, enum SCHED_CAUSE cause,
 /* This function is the entry point to the scheduler's context switching */
 
 void yield(enum SCHED_CAUSE cause) {
-  /*Dynamically Adjusts Priority of all Threads*/
-  sched_queue_evaluate(cause);
 
-  /*Checks if to apply the anti_aging_policy*/
-  if (++ageCounter >= MAX_AGE_COUNTER)
-    anti_aging_policy();
 
   /* Reset the timer, so that we are not interrupted by ALARM */
   bios_cancel_timer();
@@ -412,6 +414,14 @@ void yield(enum SCHED_CAUSE cause) {
 
   /* Get next */
   TCB *next = sched_queue_select();
+
+  /*Dynamically Adjusts Priority of all Threads*/
+  sched_queue_evaluate(cause);
+
+  /*Checks if to apply the anti_aging_policy*/
+  if (++ageCounter >= MAX_AGE_COUNTER)
+    anti_aging_policy();
+
 
   /* Maybe there was nothing ready in the scheduler queue ? */
   if (next == NULL) {
