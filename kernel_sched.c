@@ -217,7 +217,7 @@ static void sched_register_timeout(TCB *tcb, TimerDuration timeout) {
  *** MUST BE CALLED WITH sched_spinlock HELD ***
  */
 static void sched_queue_add(TCB *tcb) {
-assert((tcb->priority >=0) && (tcb->priority <=9));
+    assert((tcb->priority >=0) && (tcb->priority <=9));
   /* Insert at the end of the scheduling list */
   rlist_push_back(&SCHED[tcb->priority], &tcb->sched_node);
 
@@ -287,16 +287,17 @@ static void sched_queue_evaluate(enum SCHED_CAUSE cause) {
   switch (cause) {
   case SCHED_QUANTUM:
     if (CURTHREAD->priority < NUMBER_OF_QUEUES - 1)
-      ++CURTHREAD->priority;
+      (CURTHREAD->priority)++;
+    break;
+  case SCHED_MUTEX:
+    if (CURTHREAD->priority < NUMBER_OF_QUEUES - 1)
+     (CURTHREAD->priority)++;
     break;
   case SCHED_IO:
     if (CURTHREAD->priority > 0)
-      --CURTHREAD->priority;
+        (CURTHREAD->priority)--;
     break;
-    case SCHED_MUTEX:
-    if (CURTHREAD->priority < NUMBER_OF_QUEUES - 1)
-      ++CURTHREAD->priority;
-    break;
+
   default:
     break;
   }
@@ -308,8 +309,11 @@ static void sched_queue_evaluate(enum SCHED_CAUSE cause) {
  */
 static void anti_aging_policy() {
   // Pushes all queues 1 level up
-  for (int i = 1; i < NUMBER_OF_QUEUES; i++)
-    rlist_append(&SCHED[i - 1], &SCHED[i]);
+  for (int i = 1; i < NUMBER_OF_QUEUES; i++){
+      rlnode* current_node = rlist_pop_front(&SCHED[i]);
+      (current_node->tcb->priority)--;
+      rlist_push_back(&SCHED[i-1], current_node);
+  }
   ageCounter = 0;
 }
 
