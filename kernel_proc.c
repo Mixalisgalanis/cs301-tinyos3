@@ -18,7 +18,6 @@
 /* The process table */
 PCB PT[MAX_PROC];
 unsigned int process_count;
-unsigned int ptcb_count;
 
 PCB* get_pcb(Pid_t pid)
 {
@@ -49,7 +48,6 @@ static inline void initialize_PCB(PCB* pcb)
 
 
 static PCB* pcb_freelist;
-static PTCB* ptcb_freelist;
 
 void initialize_processes()
 {
@@ -93,14 +91,11 @@ PCB* acquire_PCB()
 }
 
 PCTB* acquire_PTCB(){
-    PTCB* ptcb = NULL;
-
-    /*if(ptcb_freelist != NULL) {
-      ptcb = ptcb_freelist;
-      ptcb->pstate = ALIVE;
-      ptcb_freelist = ptcb_freelist->parent;
-      process_count++;
-  }*/
+    PTCB* ptcb = CURPROC->ptcbs;
+    for (int i = 0; i < CURPROC->ptcbs.size(); i++){
+        if (current_ptcb->exited == 0) return current_ptcb;
+        current_ptcb = current_ptcb->next;
+    }
 
     return ptcb;
 }
@@ -139,6 +134,16 @@ void start_main_thread()
   Exit(exitval);
 }
 
+void start_thread(){
+  int exitval;
+
+  Task call =  CURTHREAD->owner_ptcb->task;
+  int argl = CURTHREAD->owner_ptcb->argl;
+  void* args = CURTHREAD->owner_ptcb->args;
+
+  exitval = call(argl,args);
+  Exit(exitval);
+}
 
 /*
 	System call to create a new process.
@@ -146,9 +151,11 @@ void start_main_thread()
 Pid_t sys_Exec(Task call, int argl, void* args)
 {
   PCB *curproc, *newproc;
+  PTCB *newptcb;
 
   /* The new process PCB */
   newproc = acquire_PCB();
+  newptcb = newproc->acquire_PTCB();
 
   if(newproc == NULL) goto finish;  /* We have run out of PIDs! */
 
@@ -193,8 +200,9 @@ Pid_t sys_Exec(Task call, int argl, void* args)
     the initialization of the PCB.
    */
   if(call != NULL) {
-    newproc->main_process_thread->main_thread = spawn_thread(newproc, start_main_thread);
-    wakeup(newproc->main_process_thread->main_thread);
+    newproc->ptcbs = newptcb->list_node;
+    newproc->ptcbs->main_thread = spawn_thread(newproc, start_main_thread);
+    wakeup(newproc->ptcbs->main_thread);
   }
 
 
@@ -343,7 +351,7 @@ void sys_Exit(int exitval)
   }
 
   /* Disconnect my main_thread */
-  curproc->main_process_thread->main_thread = NULL;
+  curproc->ptcbs->main_thread = NULL;
 
   /* Now, mark the process as exited. */
   curproc->pstate = ZOMBIE;

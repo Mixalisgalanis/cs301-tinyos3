@@ -8,9 +8,10 @@
   */
 Tid_t sys_CreateThread(Task task, int argl, void* args)
 {
-	PTCB* ptcb = acquire_PTCB();
+	PTCB* ptcb = CURPROC->acquire_PTCB();
 	rlist_push_back(&CURPROC->ptcbs, &ptcb->list_node);
 	ptcb->main_thread = spawn_thread(CURPROC, start_thread);
+	return (Tid_t) ptcb;
 
 }
 
@@ -19,7 +20,7 @@ Tid_t sys_CreateThread(Task task, int argl, void* args)
  */
 Tid_t sys_ThreadSelf()
 {
-	return (Tid_t) CURTHREAD;
+	return (Tid_t) CURTHREAD->owner_ptcb;
 }
 
 /**
@@ -27,6 +28,9 @@ Tid_t sys_ThreadSelf()
   */
 int sys_ThreadJoin(Tid_t tid, int* exitval)
 {
+	PTCB* curptcb = curproc->ptcbs;
+	while(curptcb != (PTCB*) tid)
+			curptcb = curptcb->  //exei minei miso
 	return -1;
 }
 
