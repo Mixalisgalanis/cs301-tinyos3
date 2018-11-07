@@ -22,8 +22,8 @@ Tid_t sys_CreateThread(Task task, int argl, void* args)
 
 	rlist_push_back(&CURPROC->ptcbs, &ptcb->list_node);
 	ptcb->main_thread = spawn_thread(CURPROC, start_thread);
-	wakeup(ptcb->tcb);
-	return (Tid_t) ptcb;
+	wakeup(ptcb->main_thread); // o tasoulis to eixe ptcb->tcb
+	return (Tid_t) ptcb->main_thread;
 
 }
 
@@ -40,9 +40,11 @@ Tid_t sys_ThreadSelf()
   */
 int sys_ThreadJoin(Tid_t tid, int* exitval)
 {
-	PTCB* curptcb = curproc->ptcbs;
-	while(curptcb != (PTCB*) tid)
-			curptcb = curptcb->  //exei minei miso
+	TCB* tcb = searchThread(Tid_t tid);
+	if(tcb != NULL && tcb->owner_ptcb->detached == 0 &&  tcb->owner_ptcb->exited ==0){
+		kernel_wait(tcb->owner_ptcb->cv_joined,SCHED_USER);
+		tcb->owner_ptcb->ref_count++;
+	}
 	return -1;
 }
 
@@ -51,6 +53,15 @@ int sys_ThreadJoin(Tid_t tid, int* exitval)
   */
 int sys_ThreadDetach(Tid_t tid)
 {
+	TCB* tcb = searchThread(Tid_t tid);
+	if(tcb != NULL && tcb->owner_ptcb->detached == 0 && tcb->owner_ptcb->exited ==0){
+		if(tcb->owner_ptcb->ref_count > 0){
+			tcb->owner_ptcb->ref_count = 0;
+			Cond_Broadcast(tcb->owner_ptcb->cv_joined);
+		}
+		tcb->owner_ptcb->detached == 1;
+		return 0;
+	}
 	return -1;
 }
 
@@ -59,7 +70,9 @@ int sys_ThreadDetach(Tid_t tid)
   */
 void sys_ThreadExit(int exitval)
 {
-	CURTHREAD->state = EXITED;
-CURTHREAD->owner_ptcb->exited = 1;
-CURTHREAD->owner_ptcb->exitval = exitval;
+	if(CURTHREAD->owner_ptcb->ref_count ==0){
+		CURTHREAD->state = EXITED;
+		CURTHREAD->owner_ptcb->exited = 1;
+		CURTHREAD->owner_ptcb->exitval = exitval;
+	}
 }

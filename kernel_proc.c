@@ -126,7 +126,11 @@ void start_main_thread()
 }
 
 PTCB* search_ptcb(){
-  for (int i = 0; i < rlist_length(CURPROC->ptcbs); i++)
+  rlnode temp = CURPROC->ptcbs ;
+  while(temp->next != NULL){
+      temp = temp->next;
+  }
+  return temp->ptcb; //anti gia ptcb mporei na legetai object
 }
 
 void start_thread(){
@@ -138,7 +142,7 @@ void start_thread(){
   void* args = ptcb->args;
 
   exitval = call(argl,args);
-  Exit(exitval);
+  sys_ThreadExit(exitval);
 }
 
 /*
