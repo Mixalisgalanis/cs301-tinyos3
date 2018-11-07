@@ -15,7 +15,7 @@ Tid_t sys_CreateThread(Task task, int argl, void* args)
 	ptcb-> exitval=0;
 	ptcb->exited=0;
 	ptcb->detached=0;
-	ptcb->cv_joined=COND_INIT;	//arxikopoiisi
+	ptcb->cv_joined=COND_INIT;	
 	ptcb->ref_count=0;
 
 	rlnode_init(&ptcb->node, ptcb);
@@ -23,7 +23,7 @@ Tid_t sys_CreateThread(Task task, int argl, void* args)
 	rlist_push_back(&CURPROC->ptcbs, &ptcb->list_node);
 	ptcb->main_thread = spawn_thread(CURPROC, start_thread);
 	wakeup(ptcb->tcb);
-	return (Tid_t) tcb;
+	return (Tid_t) ptcb;
 
 }
 

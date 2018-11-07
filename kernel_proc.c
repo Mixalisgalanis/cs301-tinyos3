@@ -90,15 +90,6 @@ PCB* acquire_PCB()
   return pcb;
 }
 
-PCTB* acquire_PTCB(){
-    PTCB* ptcb = CURPROC->ptcbs;
-    for (int i = 0; i < CURPROC->ptcbs.size(); i++){
-        if (current_ptcb->exited == 0) return current_ptcb;
-        current_ptcb = current_ptcb->next;
-    }
-
-    return ptcb;
-}
 
 /*
   Must be called with kernel_mutex held
@@ -134,12 +125,17 @@ void start_main_thread()
   Exit(exitval);
 }
 
+PTCB* search_ptcb(){
+  for (int i = 0; i < rlist_length(CURPROC->ptcbs); i++)
+}
+
 void start_thread(){
   int exitval;
 
-  Task call =  CURTHREAD->owner_ptcb->task;
-  int argl = CURTHREAD->owner_ptcb->argl;
-  void* args = CURTHREAD->owner_ptcb->args;
+  PTCB* ptcb=search_ptcb();
+  Task call = ptcb->task;
+  int argl = ptcb->argl;
+  void* args = ptcb->args;
 
   exitval = call(argl,args);
   Exit(exitval);
@@ -193,7 +189,21 @@ Pid_t sys_Exec(Task call, int argl, void* args)
   else
     newproc->args=NULL;
     // edits
-    rlnode_init(&newproc->ptcbs,NULL);
+  rlnode_init(&newproc->ptcbs,NULL);
+
+  PTCB *ptcb = xmalloc(sizeof(ptcb)); //dimiourgeite to structure
+
+  ptcb->task=call;
+  ptcb->argl=argl;
+  ptcb->args=args;
+  ptcb-> exitval=0;
+  ptcb->exited=0;
+  ptcb->detached=0;
+  ptcb->cv_joined=COND_INIT;
+  ptcb->ref_count=0;
+
+  rlnode_init(&ptcb->node, ptcb); //arxikopoiisi node pou vrisketai mesa sto structure
+
     //////////////////////////
 
   /*
@@ -202,12 +212,12 @@ Pid_t sys_Exec(Task call, int argl, void* args)
     the initialization of the PCB.
    */
   if(call != NULL) {
-    newproc->ptcbs = newptcb->list_node;
-    newproc->ptcbs->main_thread = spawn_thread(newproc, start_main_thread);
-    wakeup(newproc->ptcbs->main_thread);
+    ptcb->main_thread = spawn_thread(newproc, start_main_thread);
+    wakeup(ptcb->main_thread);
   }
 
 
+  rlist_push_back(&CURPROC->ptcbs, &ptcb->list_node);
 finish:
   return get_pid(newproc);
 }
