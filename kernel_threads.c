@@ -8,10 +8,22 @@
   */
 Tid_t sys_CreateThread(Task task, int argl, void* args)
 {
-	PTCB* ptcb = CURPROC->acquire_PTCB();
+	PTCB *ptcb = xmalloc(sizeof(ptcb));
+	ptcb->task=task;
+	ptcb->argl=argl;
+	ptcb->args=args;
+	ptcb-> exitval=0;
+	ptcb->exited=0;
+	ptcb->detached=0;
+	ptcb->cv_joined=COND_INIT;	//arxikopoiisi
+	ptcb->ref_count=0;
+
+	rlnode_init(&ptcb->node, ptcb);
+
 	rlist_push_back(&CURPROC->ptcbs, &ptcb->list_node);
 	ptcb->main_thread = spawn_thread(CURPROC, start_thread);
-	return (Tid_t) ptcb;
+	wakeup(ptcb->tcb);
+	return (Tid_t) tcb;
 
 }
 
@@ -20,7 +32,7 @@ Tid_t sys_CreateThread(Task task, int argl, void* args)
  */
 Tid_t sys_ThreadSelf()
 {
-	return (Tid_t) CURTHREAD->owner_ptcb;
+	return (Tid_t) CURTHREAD;
 }
 
 /**

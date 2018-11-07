@@ -68,9 +68,6 @@ typedef struct process_control_block {
 
      TCB* main_thread;       /**< The main thread */
 
-     struct process_thread_control_block * prev;  /**< previous context */
-     struct process_thread_control_block * next;  /**< next context */
-
      int argl;
      void* args;
 

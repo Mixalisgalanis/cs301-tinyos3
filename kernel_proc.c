@@ -155,7 +155,6 @@ Pid_t sys_Exec(Task call, int argl, void* args)
 
   /* The new process PCB */
   newproc = acquire_PCB();
-  newptcb = newproc->acquire_PTCB();
 
   if(newproc == NULL) goto finish;  /* We have run out of PIDs! */
 
@@ -193,6 +192,9 @@ Pid_t sys_Exec(Task call, int argl, void* args)
   }
   else
     newproc->args=NULL;
+    // edits
+    rlnode_init(&newproc->ptcbs,NULL);
+    //////////////////////////
 
   /*
     Create and wake up the thread for the main function. This must be the last thing
