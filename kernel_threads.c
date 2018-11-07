@@ -15,7 +15,7 @@ Tid_t sys_CreateThread(Task task, int argl, void* args)
 	ptcb-> exitval=0;
 	ptcb->exited=0;
 	ptcb->detached=0;
-	ptcb->cv_joined=COND_INIT;	
+	ptcb->cv_joined=COND_INIT;
 	ptcb->ref_count=0;
 
 	rlnode_init(&ptcb->node, ptcb);
@@ -59,5 +59,7 @@ int sys_ThreadDetach(Tid_t tid)
   */
 void sys_ThreadExit(int exitval)
 {
-
+	CURTHREAD->state = EXITED;
+CURTHREAD->owner_ptcb->exited = 1;
+CURTHREAD->owner_ptcb->exitval = exitval;
 }
