@@ -126,11 +126,7 @@ void start_main_thread()
 }
 
 PTCB* search_ptcb(){
-  rlnode temp = CURPROC->ptcbs ;
-  while(temp->next != NULL){
-      temp = temp->next;
-  }
-  return temp->ptcb; //anti gia ptcb mporei na legetai object
+  return CURPROC->ptcbs->previous->ptcb; 
 }
 
 void start_thread(){
