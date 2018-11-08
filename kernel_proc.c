@@ -126,20 +126,10 @@ void start_main_thread()
 }
 
 PTCB* search_ptcb(){
-  return CURPROC->ptcbs->previous->ptcb; 
+  return CURPROC->ptcbs->previous->ptcb;
 }
 
-void start_thread(){
-  int exitval;
 
-  PTCB* ptcb=search_ptcb();
-  Task call = ptcb->task;
-  int argl = ptcb->argl;
-  void* args = ptcb->args;
-
-  exitval = call(argl,args);
-  sys_ThreadExit(exitval);
-}
 
 /*
 	System call to create a new process.
