@@ -215,13 +215,14 @@ Pid_t sys_Exec(Task call, int argl, void* args)
     we do, because once we wakeup the new thread it may run! so we need to have finished
     the initialization of the PCB.
    */
+
+rlist_push_back(&CURPROC->ptcbs, &ptcb->list_node);
+
   if(call != NULL) {
     ptcb->main_thread = spawn_thread(newproc, start_main_thread);
     wakeup(ptcb->main_thread);
   }
 
-
-  rlist_push_back(&CURPROC->ptcbs, &ptcb->list_node);
 finish:
   return get_pid(newproc);
 }

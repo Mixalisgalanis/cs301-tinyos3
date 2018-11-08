@@ -18,7 +18,7 @@ Tid_t sys_CreateThread(Task task, int argl, void* args)
 	ptcb->cv_joined=COND_INIT;
 	ptcb->ref_count=0;
 
-	rlnode_init(&ptcb->node, ptcb);
+	rlnode_init(&ptcb->list_node, ptcb);
 
 	rlist_push_back(&CURPROC->ptcbs, &ptcb->list_node);
 	ptcb->main_thread = spawn_thread(CURPROC, start_thread);
