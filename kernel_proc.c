@@ -125,10 +125,6 @@ void start_main_thread()
   Exit(exitval);
 }
 
-PTCB* search_ptcb(){
-  return CURPROC->ptcbs->previous->ptcb;
-}
-
 
 
 /*
@@ -137,7 +133,6 @@ PTCB* search_ptcb(){
 Pid_t sys_Exec(Task call, int argl, void* args)
 {
   PCB *curproc, *newproc;
-  PTCB *newptcb;
 
   /* The new process PCB */
   newproc = acquire_PCB();
@@ -192,7 +187,7 @@ Pid_t sys_Exec(Task call, int argl, void* args)
   ptcb->cv_joined=COND_INIT;
   ptcb->ref_count=0;
 
-  rlnode_init(&ptcb->node, ptcb); //arxikopoiisi node pou vrisketai mesa sto structure
+  rlnode_init(&ptcb->list_node, ptcb); //arxikopoiisi node pou vrisketai mesa sto structure
 
     //////////////////////////
 
@@ -354,7 +349,7 @@ void sys_Exit(int exitval)
   }
 
   /* Disconnect my main_thread */
-  curproc->ptcbs->main_thread = NULL;
+  curproc->main_thread = NULL;
 
   /* Now, mark the process as exited. */
   curproc->pstate = ZOMBIE;

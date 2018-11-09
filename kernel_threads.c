@@ -7,26 +7,23 @@
 static Mutex kernel_mutex=MUTEX_INIT;
 
 PTCB* searchPTCB(Tid_t tid){
-	{
-		rlnode* temp ;
-		PTCB* ptcb=NULL;
-		int len= rlist_len(&CURPROC->ptcbs);
-		int i=0;
-		while(i!=len ){
-			temp=rlist_pop_front(&CURPROC);
-			if((Tid_t)temp->ptcb->main_thread == tid)
-				{ptcb=temp->ptcb;
-					rlist_push_back(&CURPROC->ptcbs,ptcb);
-					break;
-				}
-			rlist_push_back(&CURPROC->ptcbs,ptcb);
-		}
-		return ptcb;
+	rlnode* temp = CURPROC->ptcbs.next;
+	while(temp!=&(CURPROC->ptcbs)) {
+		if((Tid_t)(temp->ptcb->main_thread) == tid)
+			return temp->ptcb;
+		else
+			temp = temp->next;
 	}
+	return NULL;
 }
 /**
   @brief Create a new thread in the current process.
   */
+
+	PTCB* search_ptcb(){
+	  return CURPROC->ptcbs.prev->ptcb;
+	}
+
 	void start_thread(){
 	  int exitval;
 
@@ -134,8 +131,7 @@ void sys_ThreadExit(int exitval)
 }
 
 /*TCB* searchThread1(Tid_t tid){
-	{
-		rlnode* temp = CURPROC->ptcbs->next;
+		rlnode* temp = CURPROC->ptcbs.next;
 		while(temp!=CURPROC->ptcbs) {
 			if((Tid_t)(temp->ptcb->main_thread) == tid)
 				return temp->ptcb->main_thread;
@@ -144,4 +140,4 @@ void sys_ThreadExit(int exitval)
 		}
 		return NULL;
 	}
-}*/
+*/
