@@ -8,14 +8,20 @@ static Mutex kernel_mutex=MUTEX_INIT;
 
 PTCB* searchPTCB(Tid_t tid){
 	{
-		rlnode* temp = CURPROC->ptcbs->next;
-		while(temp!=&(CURPROC->ptcbs)) {
-			if((Tid_t)(temp->ptcb->main_thread) == tid)
-				return temp->ptcb;
-			else
-				temp = temp->next;
+		rlnode* temp ;
+		PTCB* ptcb=NULL;
+		int len= rlist_len(&CURPROC->ptcbs);
+		int i=0;
+		while(i!=len ){
+			temp=rlist_pop_front(&CURPROC);
+			if((Tid_t)temp->ptcb->main_thread == tid)
+				{ptcb=temp->ptcb;
+					rlist_push_back(&CURPROC->ptcbs,ptcb);
+					break;
+				}
+			rlist_push_back(&CURPROC->ptcbs,ptcb);
 		}
-		return NULL;
+		return ptcb;
 	}
 }
 /**
