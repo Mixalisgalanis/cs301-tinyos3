@@ -197,7 +197,7 @@ Pid_t sys_Exec(Task call, int argl, void* args)
     the initialization of the PCB.
    */
 
-rlist_push_back(&CURPROC->ptcbs, &ptcb->list_node);
+rlist_push_back(CURPROC->ptcbs, &ptcb->list_node);
 
   if(call != NULL) {
     ptcb->main_thread = spawn_thread(newproc, start_main_thread);

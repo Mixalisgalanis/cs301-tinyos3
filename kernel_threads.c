@@ -70,29 +70,25 @@ Tid_t sys_ThreadSelf()
   */
 int sys_ThreadJoin(Tid_t tid, int* exitval)
 {
-
 	PTCB* ptcb=searchPTCB(tid);
 
-		if(ptcb->detached == 1 || ptcb==NULL || CURTHREAD==ptcb->main_thread ){
-			return -1 ;
-		}else {
-			ptcb->ref_count ++;
-			while( ptcb->exited!=1 && ptcb->detached!=1){
-				kernel_wait(&ptcb->cv_joined,SCHED_USER);
-			}
-			ptcb->ref_count--;
-			if(exitval!=NULL){
-				*exitval=ptcb->exitval;
-			}
-			if(ptcb->ref_count==0){
-				rlist_remove(&ptcb->list_node);
-				free(ptcb);
-			}
-			return 0;
-
+	if(ptcb->detached == 1 || ptcb==NULL || CURTHREAD==ptcb->main_thread ){
+		return -1 ;
+	}else {
+		ptcb->ref_count ++;
+		while( ptcb->exited!=1 && ptcb->detached!=1){
+			kernel_wait(&ptcb->cv_joined,SCHED_USER);
 		}
-
-
+		ptcb->ref_count--;
+		if(exitval!=NULL){
+			*exitval=ptcb->exitval;
+		}
+		if(ptcb->ref_count==0){
+			rlist_remove(&ptcb->list_node);
+			free(ptcb);
+		}
+		return 0;
+	}
 	return -1;
 }
 
@@ -102,13 +98,12 @@ int sys_ThreadJoin(Tid_t tid, int* exitval)
 int sys_ThreadDetach(Tid_t tid)
 {
 	PTCB* ptcb=searchPTCB(tid);
-	TCB* tcb =ptcb->main_thread;
-	if(tcb != NULL && tcb->owner_ptcb->detached == 0 && tcb->owner_ptcb->exited ==0){
-		if(tcb->owner_ptcb->ref_count > 0){
-			tcb->owner_ptcb->ref_count = 0;
-			Cond_Broadcast(&tcb->owner_ptcb->cv_joined);
+	if(ptcb != NULL && ptcb->detached == 0 && ptcb->exited ==0){
+		if(ptcb->ref_count > 0){
+			ptcb->ref_count = 0;
+			Cond_Broadcast(&ptcb->cv_joined);
 		}
-		tcb->owner_ptcb->detached == 1;
+		ptcb->detached = 1;
 		return 0;
 	}
 	return -1;
