@@ -99,20 +99,20 @@ int sys_ThreadJoin(Tid_t tid, int* exitval)
 /**
   @brief Detach the given thread.
   */
-/*int sys_ThreadDetach(Tid_t tid)
+int sys_ThreadDetach(Tid_t tid)
 {
 	PTCB* ptcb=searchPTCB(tid);
 	TCB* tcb =ptcb->main_thread;
 	if(tcb != NULL && tcb->owner_ptcb->detached == 0 && tcb->owner_ptcb->exited ==0){
 		if(tcb->owner_ptcb->ref_count > 0){
 			tcb->owner_ptcb->ref_count = 0;
-			Cond_Broadcast(tcb->owner_ptcb->cv_joined);
+			Cond_Broadcast(&tcb->owner_ptcb->cv_joined);
 		}
 		tcb->owner_ptcb->detached == 1;
 		return 0;
 	}
 	return -1;
-}*/
+}
 
 /**
   @brief Terminate the current thread.
