@@ -53,6 +53,7 @@ Tid_t sys_CreateThread(Task task, int argl, void* args)
 	rlist_push_back(&CURPROC->ptcbs, &ptcb->list_node);
 	ptcb->main_thread = spawn_thread(CURPROC, start_thread);
 	wakeup(ptcb->main_thread);
+	fprintf(stderr, "Thread Creation attemption\n");
 	return (Tid_t) ptcb->main_thread;
 
 }
@@ -114,15 +115,15 @@ int sys_ThreadDetach(Tid_t tid)
   */
 void sys_ThreadExit(int exitval)
 {
-		PTCB* ptcb= searchPTCB((Tid_t)CURTHREAD);
+	PTCB* ptcb= searchPTCB((Tid_t)CURTHREAD);
 
-		CURTHREAD->state = EXITED;
-		ptcb->exited = 1;
-		ptcb->exitval = exitval;
-		Cond_Broadcast(&ptcb->cv_joined);
-		kernel_lock();
-		sleep_releasing(EXITED,&kernel_mutex,SCHED_USER,0);
-		kernel_unlock();
+	CURTHREAD->state = EXITED;
+	ptcb->exited = 1;
+	ptcb->exitval = exitval;
+	Cond_Broadcast(&ptcb->cv_joined);
+	kernel_lock();
+	sleep_releasing(EXITED,&kernel_mutex,SCHED_USER,0);
+	kernel_unlock();
 }
 
 /*TCB* searchThread1(Tid_t tid){

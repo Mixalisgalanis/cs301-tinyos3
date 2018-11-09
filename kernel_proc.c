@@ -181,7 +181,7 @@ Pid_t sys_Exec(Task call, int argl, void* args)
   ptcb->task=call;
   ptcb->argl=argl;
   ptcb->args=args;
-  ptcb-> exitval=0;
+  ptcb->exitval=0;
   ptcb->exited=0;
   ptcb->detached=0;
   ptcb->cv_joined=COND_INIT;
@@ -189,20 +189,19 @@ Pid_t sys_Exec(Task call, int argl, void* args)
 
   rlnode_init(&ptcb->list_node, ptcb); //arxikopoiisi node pou vrisketai mesa sto structure
 
-    //////////////////////////
-
   /*
     Create and wake up the thread for the main function. This must be the last thing
     we do, because once we wakeup the new thread it may run! so we need to have finished
     the initialization of the PCB.
    */
-
-rlist_push_back(CURPROC->ptcbs, &ptcb->list_node);
+rlist_push_back(&newproc->ptcbs, &ptcb->list_node);
 
   if(call != NULL) {
     ptcb->main_thread = spawn_thread(newproc, start_main_thread);
     wakeup(ptcb->main_thread);
   }
+
+
 
 finish:
   return get_pid(newproc);
