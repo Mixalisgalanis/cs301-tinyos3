@@ -15,21 +15,20 @@
   @{
 */
 
-#include "tinyos.h"
 #include "kernel_sched.h"
+#include "tinyos.h"
 
 /**
   @brief PID state
 
-  A PID can be either free (no process is using it), ALIVE (some running process is
-  using it), or ZOMBIE (a zombie process is using it).
+  A PID can be either free (no process is using it), ALIVE (some running process
+  is using it), or ZOMBIE (a zombie process is using it).
   */
 typedef enum pid_state_e {
-  FREE,   /**< The PID is free and available */
-  ALIVE,  /**< The PID is given to a process */
-  ZOMBIE  /**< The PID is held by a zombie */
+  FREE,  /**< The PID is free and available */
+  ALIVE, /**< The PID is given to a process */
+  ZOMBIE /**< The PID is held by a zombie */
 } pid_state;
-
 
 /**
   @brief Process Control Block.
@@ -37,56 +36,49 @@ typedef enum pid_state_e {
   This structure holds all information pertaining to a process.
  */
 typedef struct process_control_block {
-  pid_state  pstate;      /**< The pid state for this PCB */
+  pid_state pstate; /**< The pid state for this PCB */
   // our edits
   rlnode ptcbs;
   //
-  PCB* parent;            /**< Parent's pcb. */
-  int exitval;            /**< The exit value */
+  PCB *parent; /**< Parent's pcb. */
+  int exitval; /**< The exit value */
 
-  TCB* main_thread;       /**< The main thread */
-  Task main_task;         /**< The main thread's function */
-  int argl;               /**< The main thread's argument length */
-  void* args;             /**< The main thread's argument string */
+  TCB *main_thread; /**< The main thread */
+  Task main_task;   /**< The main thread's function */
+  int argl;         /**< The main thread's argument length */
+  void *args;       /**< The main thread's argument string */
 
-  rlnode children_list;   /**< List of children */
-  rlnode exited_list;     /**< List of exited children */
+  rlnode children_list; /**< List of children */
+  rlnode exited_list;   /**< List of exited children */
 
-  rlnode children_node;   /**< Intrusive node for @c children_list */
-  rlnode exited_node;     /**< Intrusive node for @c exited_list */
-  CondVar child_exit;     /**< Condition variable for @c WaitChild */
+  rlnode children_node; /**< Intrusive node for @c children_list */
+  rlnode exited_node;   /**< Intrusive node for @c exited_list */
+  CondVar child_exit;   /**< Condition variable for @c WaitChild */
 
-  FCB* FIDT[MAX_FILEID];  /**< The fileid table of the process */
+  FCB *FIDT[MAX_FILEID]; /**< The fileid table of the process */
 
 } PCB;
 
-typedef enum Detach_state{
-  DETACH,
-  UNDETACH
-}detach_state;
+typedef enum Detach_state { DETACH, UNDETACH } detach_state;
 
-typedef enum Exit_state{
-  EXITED_STATE,
-  NOTEXITED
-}Exit_state;
+typedef enum Exit_state { EXITED_STATE, NOTEXITED } Exit_state;
 
-typedef struct p_thread_control_block{
+typedef struct p_thread_control_block {
 
-  PCB* pcb ;
-  Tid_t tid; // tasos
-  int exitval;  // exit value
-  TCB* main_thread ;  // the main thread
-  Task task; // the main thread func
-  int argl;  // argument lenght
-  void *args ; // argument string
-  int  detached;
-  rlnode list_node ;
+  PCB *pcb;
+  Tid_t tid;        // tasos
+  int exitval;      // exit value
+  TCB *main_thread; // the main thread
+  Task task;        // the main thread func
+  int argl;         // argument lenght
+  void *args;       // argument string
+  int detached;
+  rlnode list_node;
   CondVar cv_joined; // condition variable for WaitChild
   int ref_count;
-  int  exited ;
+  int exited;
 
-
-}PTCB;
+} PTCB;
 
 /**
   @brief Initialize the process table.
@@ -106,7 +98,7 @@ void initialize_processes();
   @param pid the pid of the process
   @returns A pointer to the PCB of the process, or NULL.
 */
-PCB* get_pcb(Pid_t pid);
+PCB *get_pcb(Pid_t pid);
 
 /**
   @brief Get the PID of a PCB.
@@ -118,7 +110,7 @@ PCB* get_pcb(Pid_t pid);
   @param pcb the pcb of the process
   @returns the PID of the process, or NOPROC.
 */
-Pid_t get_pid(PCB* pcb);
+Pid_t get_pid(PCB *pcb);
 
 /** @} */
 
