@@ -118,7 +118,8 @@ TCB *spawn_thread(PCB *pcb, void (*func)()) {
   tcb->phase = CTX_CLEAN;
   tcb->thread_func = func;
   tcb->wakeup_time = NO_TIMEOUT;
-  tcb->priority = NUMBER_OF_QUEUES / 2;
+  tcb->priority =
+      NUMBER_OF_QUEUES / 2; /*Initial Priority is at the central queue*/
   rlnode_init(&tcb->sched_node, tcb); /* Intrusive list node */
 
   /* Compute the stack segment address and size */
@@ -218,7 +219,7 @@ static void sched_register_timeout(TCB *tcb, TimerDuration timeout) {
   *** MUST BE CALLED WITH sched_spinlock HELD ***
 */
 static void sched_queue_add(TCB *tcb) {
-  /* Insert at the end of the scheduling list */
+  /* Insert at the end of the appropriate scheduling queue */
   rlist_push_back(&SCHED[tcb->priority], &tcb->sched_node);
 
   /* Restart possibly halted cores */
@@ -266,13 +267,14 @@ static TCB *sched_queue_select() {
     sched_make_ready(tcb);
   }
   rlnode *sel = NULL;
+  // Searches and returns the first found node in any queue. If no node is found
+  // returns NULL
   for (int i = 0; i < NUMBER_OF_QUEUES; i++) {
     if (!is_rlist_empty(&SCHED[i])) {
       sel = rlist_pop_front(&SCHED[i]);
       break;
     }
   }
-  /* Get the head of the SCHED list */
 
   return sel == NULL ? NULL
                      : sel->tcb; /* When the list is empty, this is NULL */
@@ -343,45 +345,51 @@ void sleep_releasing(Thread_state state, Mutex *mx, enum SCHED_CAUSE cause,
     preempt_on;
 }
 
+/*
+    Adjusts a thread's priority based on thread type
+*/
 static void sched_queue_evaluate(enum SCHED_CAUSE cause) {
   // Calculates priority with a switch case structure based on a Cause
   switch (cause) {
-  case SCHED_QUANTUM:
+  case SCHED_QUANTUM: // Thread Time's up - Decreases Priority
     if (CURTHREAD->priority < NUMBER_OF_QUEUES - 1)
       (CURTHREAD->priority)++;
     break;
-  case SCHED_MUTEX:
+  case SCHED_MUTEX: // Thread is locked by another thread - Decreases Priority
     if (CURTHREAD->priority < NUMBER_OF_QUEUES - 1)
       (CURTHREAD->priority)++;
     break;
-  case SCHED_IO:
+  case SCHED_IO: // Thead is IO based - Assigns Maximum Priority
     if (CURTHREAD->priority > 0)
       (CURTHREAD->priority = 0);
     break;
-
-  default:
+  default: // Other Thread Cause - Priority is not modified
     break;
   }
 }
-static void anti_aging_policy() {
-  // Pushes all queues 1 level up
+
+/*
+    Prevents thread starvation by pushing all queues by 1 level every a
+   certain amount of yield calls. (Increases each thread's priority by 1)
+*/
+static void anti_starvation_policy() {
+  // For every queue
   for (int i = 1; i < NUMBER_OF_QUEUES; i++) {
-    //  rlnode *temp = &SCHED[i];
+    // For every node in a certain queue
     for (int y = 0; y < rlist_len(&SCHED[i]); y++) {
+      // Pops the front node
       rlnode *current_node = rlist_pop_front(&SCHED[i]);
+      // Increases priority
       current_node->tcb->priority--;
+      // Pushes the node at the above queue's back
       rlist_push_back(&SCHED[i - 1], current_node);
-      // temp=temp->next;
     }
-    // rlist_append(&SCHED[i-1], &SCHED[i]);
-    // rlnode* current_node = rlist_pop_front(&SCHED[i]);
-    //(current_node->tcb->priority)--;
-    // rlist_push_back(&SCHED[i-1], current_node);
   }
+  // Resets the ageCounter
   ageCounter = 0;
 }
-/* This function is the entry point to the scheduler's context switching */
 
+/* This function is the entry point to the scheduler's context switching */
 void yield(enum SCHED_CAUSE cause) {
   /* Reset the timer, so that we are not interrupted by ALARM */
   bios_cancel_timer();
@@ -401,7 +409,6 @@ void yield(enum SCHED_CAUSE cause) {
   case READY: /* We were awakened before we managed to sleep! */
     current_ready = 1;
     break;
-
   case STOPPED:
   case EXITED:
     break;
@@ -435,10 +442,12 @@ void yield(enum SCHED_CAUSE cause) {
     cpu_swap_context(&current->context, &next->context);
   }
 
+  // Calculates new priority of the current thread
   sched_queue_evaluate(cause);
-  ageCounter++;
-  if (ageCounter >= MAX_AGE_COUNTER) {
-    anti_aging_policy();
+  // Increases priority and checks if priority threshold has been reached to
+  // then apply the anti_starvation_policy
+  if (++ageCounter >= MAX_AGE_COUNTER) {
+    anti_starvation_policy();
   }
   /* This is where we get after we are switched back on! A long time
      may have passed. Start a new timeslice...
@@ -515,11 +524,12 @@ static void idle_thread() {
   Initialize the scheduler queue
  */
 void initialize_scheduler() {
-
+  // Initialize every queue indipendently
   for (int i = 0; i < NUMBER_OF_QUEUES; i++) {
     rlnode_init(&SCHED[i], NULL);
   }
   rlnode_init(&TIMEOUT_LIST, NULL);
+  // Initializes the ageCounter
   ageCounter = 0;
 }
 

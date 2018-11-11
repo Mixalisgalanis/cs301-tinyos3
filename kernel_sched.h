@@ -108,7 +108,7 @@ typedef struct thread_control_block {
   struct thread_control_block *prev; /**< previous context */
   struct thread_control_block *next; /**< next context */
 
-  int priority;
+  int priority; // This defines the thread's priority
 
 } TCB;
 
