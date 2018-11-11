@@ -44,6 +44,7 @@ static inline void initialize_PCB(PCB* pcb)
   rlnode_init(& pcb->children_node, pcb);
   rlnode_init(& pcb->exited_node, pcb);
   pcb->child_exit = COND_INIT;
+  rlnode_init(&pcb->ptcbs,NULL);
 }
 
 
@@ -90,7 +91,6 @@ PCB* acquire_PCB()
   return pcb;
 }
 
-
 /*
   Must be called with kernel_mutex held
 */
@@ -124,7 +124,6 @@ void start_main_thread()
   exitval = call(argl,args);
   Exit(exitval);
 }
-
 
 
 /*
@@ -173,34 +172,35 @@ Pid_t sys_Exec(Task call, int argl, void* args)
   }
   else
     newproc->args=NULL;
-    // edits
-  rlnode_init(&newproc->ptcbs,NULL);
 
-  PTCB *ptcb = xmalloc(sizeof(ptcb)); //dimiourgeite to structure
 
-  ptcb->task=call;
-  ptcb->argl=argl;
-  ptcb->args=args;
-  ptcb->exitval=0;
+  PTCB* ptcb = (PTCB*) xmalloc(sizeof(PTCB));
+  ptcb->pcb=newproc;
+  ptcb->argl= argl;
+  if(args==NULL){
+    ptcb->args=NULL;
+  }else{
+    ptcb->args =args;
+  }
+  ptcb-> ref_count=0;
+  ptcb -> task = call;
+  ptcb -> detached =0;
+  ptcb -> cv_joined = COND_INIT;
   ptcb->exited=0;
-  ptcb->detached=0;
-  ptcb->cv_joined=COND_INIT;
-  ptcb->ref_count=0;
-
-  rlnode_init(&ptcb->list_node, ptcb); //arxikopoiisi node pou vrisketai mesa sto structure
+  assert(ptcb!= NULL);
+  rlnode_init(&ptcb->list_node,ptcb);
+  rlist_push_back(&newproc->ptcbs,&ptcb->list_node);
 
   /*
     Create and wake up the thread for the main function. This must be the last thing
     we do, because once we wakeup the new thread it may run! so we need to have finished
     the initialization of the PCB.
    */
-rlist_push_back(&newproc->ptcbs, &ptcb->list_node);
-
   if(call != NULL) {
-    ptcb->main_thread = spawn_thread(newproc, start_main_thread);
+    newproc->main_thread = spawn_thread(newproc, start_main_thread);
+    ptcb->main_thread=newproc->main_thread;
     wakeup(ptcb->main_thread);
   }
-
 
 
 finish:
@@ -303,6 +303,7 @@ Pid_t sys_WaitChild(Pid_t cpid, int* status)
 
 void sys_Exit(int exitval)
 {
+
   /* Right here, we must check that we are not the boot task. If we are,
      we must wait until all processes exit. */
   if(sys_GetPid()==1) {

@@ -1,6 +1,6 @@
 #ifndef __KERNEL_PROC_H
 #define __KERNEL_PROC_H
-
+#define max_of_ptcb 1024
 /**
   @file kernel_proc.h
   @brief The process table and process management.
@@ -30,6 +30,7 @@ typedef enum pid_state_e {
   ZOMBIE  /**< The PID is held by a zombie */
 } pid_state;
 
+
 /**
   @brief Process Control Block.
 
@@ -37,12 +38,13 @@ typedef enum pid_state_e {
  */
 typedef struct process_control_block {
   pid_state  pstate;      /**< The pid state for this PCB */
-
+  // our edits
+  rlnode ptcbs;
+  //
   PCB* parent;            /**< Parent's pcb. */
   int exitval;            /**< The exit value */
 
-  TCB* main_thread;
-  rlnode ptcbs;           /**< The main process thread */
+  TCB* main_thread;       /**< The main thread */
   Task main_task;         /**< The main thread's function */
   int argl;               /**< The main thread's argument length */
   void* args;             /**< The main thread's argument string */
@@ -58,32 +60,33 @@ typedef struct process_control_block {
 
 } PCB;
 
-/**
-  @brief Process-Thread Control Block.
+typedef enum Detach_state{
+  DETACH,
+  UNDETACH
+}detach_state;
 
-  This structure holds all information pertaining to a process-thread.
- */
- typedef struct process_thread_control_block {
-     rlnode list_node;
-     Task task;
+typedef enum Exit_state{
+  EXITED_STATE,
+  NOTEXITED
+}Exit_state;
 
-     TCB* main_thread;       /**< The main thread */
+typedef struct p_thread_control_block{
 
-     int argl;
-     void* args;
-
-     int exitval;
-     int exited; //Boolean
-
-     int detached; //Boolean
-     CondVar cv_joined;
-     int ref_count;
-
- } PTCB;
-
-
+  PCB* pcb ;
+  Tid_t tid; // tasos
+  int exitval;  // exit value
+  TCB* main_thread ;  // the main thread
+  Task task; // the main thread func
+  int argl;  // argument lenght
+  void *args ; // argument string
+  int  detached;
+  rlnode list_node ;
+  CondVar cv_joined; // condition variable for WaitChild
+  int ref_count;
+  int  exited ;
 
 
+}PTCB;
 
 /**
   @brief Initialize the process table.
