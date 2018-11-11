@@ -153,7 +153,7 @@ Pid_t sys_Exec(Task call, int argl, void *args) {
   } else
     newproc->args = NULL;
 
-  PTCB *ptcb = (PTCB *)xmalloc(sizeof(PTCB));
+  PTCB *ptcb = (PTCB *)xmalloc(sizeof(PTCB));/*Allocates space for ptcb*/
   ptcb->pcb = newproc;
   ptcb->argl = argl;
   if (args == NULL) {
@@ -168,7 +168,7 @@ Pid_t sys_Exec(Task call, int argl, void *args) {
   ptcb->exited = 0;
 
   // Initializes PTCB node and pushes it back to the ptcbs list in PCB
-  rlnode_init(&ptcb->list_node, ptcb);
+  rlnode_init(&ptcb->list_node, ptcb); //to rlnode deixnei sto ptcb, next kai prev deixnoun ston eauto tou
   rlist_push_back(&newproc->ptcbs, &ptcb->list_node);
 
   /*
@@ -177,8 +177,8 @@ Pid_t sys_Exec(Task call, int argl, void *args) {
     have finished the initialization of the PCB.
    */
   if (call != NULL) {
-    newproc->main_thread = spawn_thread(newproc, start_main_thread);
-    ptcb->main_thread = newproc->main_thread;
+    newproc->main_thread = spawn_thread(newproc, start_main_thread); //to pcb deixnei sto tcb
+    ptcb->main_thread = newproc->main_thread; //to ptcb deixnei sto tcb
     wakeup(ptcb->main_thread);
   }
 

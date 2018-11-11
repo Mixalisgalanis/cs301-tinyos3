@@ -323,7 +323,7 @@ typedef struct resource_list_node {
      */
   union {
     PCB *pcb;
-    PTCB *ptcb; //////////////////
+    PTCB *ptcb; //gia na deixnei to rlnode kai se typo ptcb
     TCB *tcb;
     CCB *ccb;
     DCB *dcb;

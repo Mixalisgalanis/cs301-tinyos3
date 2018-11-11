@@ -63,7 +63,7 @@ typedef enum Detach_state { DETACH, UNDETACH } detach_state;
 
 typedef enum Exit_state { EXITED_STATE, NOTEXITED } Exit_state;
 
-typedef struct p_thread_control_block {
+typedef struct p_thread_control_block { //orisame to block tou ptcb
   // Basic Structure
   PCB *pcb;         /*PCB Owner*/
   TCB *main_thread; /*Main Thread*/

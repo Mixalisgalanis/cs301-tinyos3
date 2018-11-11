@@ -11,8 +11,8 @@ static Mutex kernel_mutex = MUTEX_INIT;
  ID
  */
 PTCB *searchPTCB(Tid_t tid) {
-  rlnode *temp = CURPROC->ptcbs.next;
-  while (temp != &(CURPROC->ptcbs)) {
+  rlnode *temp = CURPROC->ptcbs.next; //to temp deixnei sto prwto stoixeio
+  while (temp != &(CURPROC->ptcbs)) { //sigkrisi temp me to head tis listas
     if ((Tid_t)(temp->ptcb->main_thread) == tid)
       return temp->ptcb;
     else
@@ -26,7 +26,7 @@ PTCB *searchPTCB(Tid_t tid) {
  Task
  */
 void start_thread() {
-  PTCB *ptcb = searchPTCB((Tid_t)CURTHREAD);
+  PTCB *ptcb = searchPTCB((Tid_t)CURTHREAD); //evresi tou current ptcb
   int exitval;
   Task call = ptcb->task;
   int argl = ptcb->argl;
@@ -47,7 +47,7 @@ Tid_t sys_CreateThread(Task task, int argl, void *args) {
     PTCB *ptcb = (PTCB *)xmalloc(sizeof(PTCB)); /*Allocates space for ptcb*/
 
     // Setting up flags of PTCB
-    ptcb->pcb = pcb;                           /*Sets owner PTCB of PTCB*/
+    ptcb->pcb = pcb;                           /*Sets owner PCB of PTCB*/
     ptcb->argl = argl;                         /*Initializes argl flag*/
     ptcb->args = (args == NULL) ? NULL : args; /*Initializes args flag*/
     ptcb->ref_count = 0;                       /*Initializes ref_count counter*/
@@ -57,10 +57,10 @@ Tid_t sys_CreateThread(Task task, int argl, void *args) {
     ptcb->exited = 0; /*Initializes exited flag*/
 
     // Initializes PTCB node and pushes it back to the ptcbs list in PCB
-    rlnode_init(&ptcb->list_node, ptcb);
+    rlnode_init(&ptcb->list_node, ptcb); //to rlnode deixnei sto ptcb, next kai prev deixnoun ston eauto tou
     rlist_push_back(&CURPROC->ptcbs, &ptcb->list_node);
 
-    // Starts & Initializes thread
+    // Starts & Initializes thread, enwsi me pcb
     TCB *tcb = spawn_thread(CURPROC, start_thread);
     ptcb->main_thread = tcb;
     ptcb->tid = (Tid_t)tcb;
@@ -96,8 +96,8 @@ int sys_ThreadJoin(Tid_t tid, int *exitval) {
 
     ptcb->ref_count++;
 
-    while (ptcb->exited != 1 && ptcb->detached != 1) {
-      kernel_wait(&ptcb->cv_joined, SCHED_USER);
+    while (ptcb->exited != 1 && ptcb->detached != 1) { //mexri to ptcb na ginei extied i detached
+      kernel_wait(&ptcb->cv_joined, SCHED_USER);      //to thread tha einai joined
     }
     ptcb->ref_count--;
 
@@ -122,10 +122,10 @@ int sys_ThreadDetach(Tid_t tid) {
 
   fprintf(stderr, "%ld detach\n", ptcb->tid);
 
-  if (ptcb != NULL || ptcb->exited == 1) {
-    if (ptcb->ref_count > 0) {
+  if (ptcb != NULL || ptcb->exited != 1) {
+    if (ptcb->ref_count > 0) { //an yparxoun thread pou exoun kanei join
       ptcb->ref_count = 0;
-      Cond_Broadcast(&ptcb->cv_joined);
+      Cond_Broadcast(&ptcb->cv_joined); //xipname ola ta nimata
     }
     ptcb->detached = 1;
 
@@ -140,14 +140,13 @@ int sys_ThreadDetach(Tid_t tid) {
   */
 void sys_ThreadExit(int exitval) {
   PTCB *ptcb = searchPTCB((Tid_t)CURTHREAD);
-  assert(ptcb != NULL);
 
   ptcb->exited = 1;
   ptcb->exitval = exitval;
 
-  Cond_Broadcast(&ptcb->cv_joined);
+  Cond_Broadcast(&ptcb->cv_joined); //xipname ola ta nimata pou einai joined
 
   kernel_unlock();
-  sleep_releasing(EXITED, &kernel_mutex, SCHED_USER, 0);
+  sleep_releasing(EXITED, &kernel_mutex, SCHED_USER, 0); //termatizei to quantum tou thread kai o scheduler pairnei to epomeno nimata
   kernel_lock();
 }
