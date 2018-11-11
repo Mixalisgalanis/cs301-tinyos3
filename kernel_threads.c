@@ -6,6 +6,10 @@
 #include "util.h"
 static Mutex kernel_mutex = MUTEX_INIT;
 
+/**
+ @brief Finds and returns a PTCB in the current Process based on a given Thread
+ ID
+ */
 PTCB *searchPTCB(Tid_t tid) {
   rlnode *temp = CURPROC->ptcbs.next;
   while (temp != &(CURPROC->ptcbs)) {
@@ -17,6 +21,10 @@ PTCB *searchPTCB(Tid_t tid) {
   return NULL;
 }
 
+/**
+ @brief Initializes the argl,args arguements and calls the Thread's Main Func
+ Task
+ */
 void start_thread() {
   PTCB *ptcb = searchPTCB((Tid_t)CURTHREAD);
   int exitval;
@@ -32,32 +40,32 @@ void start_thread() {
   @brief Create a new thread in the current process.
   */
 Tid_t sys_CreateThread(Task task, int argl, void *args) {
+  // Makes sure that there is a task
   if (task != NULL) {
-    PCB *pcb = CURPROC;
-    PTCB *ptcb = (PTCB *)xmalloc(sizeof(PTCB));
-    ptcb->pcb = pcb;
-    ptcb->argl = argl;
-    if (args == NULL) {
-      ptcb->args = NULL;
-    } else {
-      ptcb->args = args;
-    }
-    ptcb->ref_count = 0;
-    ptcb->task = task;
+    // Setting up PCB & PTCB
+    PCB *pcb = CURPROC;                         /*Creates a local copy of PCB*/
+    PTCB *ptcb = (PTCB *)xmalloc(sizeof(PTCB)); /*Allocates space for ptcb*/
 
-    ptcb->detached = 0;
+    // Setting up flags of PTCB
+    ptcb->pcb = pcb;                           /*Sets owner PTCB of PTCB*/
+    ptcb->argl = argl;                         /*Initializes argl flag*/
+    ptcb->args = (args == NULL) ? NULL : args; /*Initializes args flag*/
+    ptcb->ref_count = 0;                       /*Initializes ref_count counter*/
+    ptcb->task = task;                         /*Initializes main task*/
+    ptcb->detached = 0;                        /*Initializes detached flag*/
     ptcb->cv_joined = COND_INIT;
-    ptcb->exited = 0;
-    assert(ptcb != NULL);
+    ptcb->exited = 0; /*Initializes exited flag*/
+
+    // Initializes PTCB node and pushes it back to the ptcbs list in PCB
     rlnode_init(&ptcb->list_node, ptcb);
     rlist_push_back(&CURPROC->ptcbs, &ptcb->list_node);
 
+    // Starts & Initializes thread
     TCB *tcb = spawn_thread(CURPROC, start_thread);
     ptcb->main_thread = tcb;
     ptcb->tid = (Tid_t)tcb;
-    assert(ptcb != NULL);
     wakeup(ptcb->main_thread);
-    //	fprintf(stderr, "active_ptcb\n" );
+
     return (Tid_t)tcb;
   }
   return NOTHREAD;
@@ -72,14 +80,18 @@ Tid_t sys_ThreadSelf() { return (Tid_t)CURTHREAD; }
   @brief Join the given thread.
   */
 int sys_ThreadJoin(Tid_t tid, int *exitval) {
+  //
   TCB *tcb = (TCB *)tid;
+
   if (tcb == NULL)
-    return -1;
+    return -1; // Thread Join Failed
 
   PTCB *ptcb = searchPTCB(tid);
-  // assert(cur_id!=-1);
+  /*Makes sure the PTCB exists,
+   the thread we are joining isn't detached and
+   that we are not joining the self thread*/
   if (ptcb == NULL || ptcb->detached == 1 || (Tid_t)CURTHREAD == tid) {
-    return -1;
+    return -1; // Thread Join Failed
   } else {
 
     ptcb->ref_count++;
@@ -96,7 +108,6 @@ int sys_ThreadJoin(Tid_t tid, int *exitval) {
       rlist_remove(&ptcb->list_node);
       free(ptcb);
     }
-    return 0;
   }
 
   return 0;

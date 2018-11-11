@@ -37,9 +37,9 @@ typedef enum pid_state_e {
  */
 typedef struct process_control_block {
   pid_state pstate; /**< The pid state for this PCB */
-  // our edits
-  rlnode ptcbs;
-  //
+
+  rlnode ptcbs; /*List with ptcbs*/
+
   PCB *parent; /**< Parent's pcb. */
   int exitval; /**< The exit value */
 
@@ -64,19 +64,23 @@ typedef enum Detach_state { DETACH, UNDETACH } detach_state;
 typedef enum Exit_state { EXITED_STATE, NOTEXITED } Exit_state;
 
 typedef struct p_thread_control_block {
+  // Basic Structure
+  PCB *pcb;         /*PCB Owner*/
+  TCB *main_thread; /*Main Thread*/
+  Tid_t tid;        /*ID of Thread*/
+  Task task;        /*Main Function of Thread*/
+  rlnode list_node; /* PTCB node to be inserted in ptcbs list*/
 
-  PCB *pcb;
-  Tid_t tid;        // tasos
-  int exitval;      // exit value
-  TCB *main_thread; // the main thread
-  Task task;        // the main thread func
-  int argl;         // argument lenght
-  void *args;       // argument string
-  int detached;
-  rlnode list_node;
-  CondVar cv_joined; // condition variable for WaitChild
-  int ref_count;
-  int exited;
+  // Arguements
+  int argl;   /* argument lenght*/
+  void *args; /* argument string*/
+
+  // Status flags
+  int detached;      /*Won't let other threads join if this flag is enabled*/
+  int exited;        /*Thread is finished if this flag is enabled*/
+  int exitval;       /*Exit value*/
+  int ref_count;     /*Show how many threads have joined this thread*/
+  CondVar cv_joined; /*Condition variable for WaitChild*/
 
 } PTCB;
 

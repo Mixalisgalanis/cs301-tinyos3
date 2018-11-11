@@ -166,7 +166,8 @@ Pid_t sys_Exec(Task call, int argl, void *args) {
   ptcb->detached = 0;
   ptcb->cv_joined = COND_INIT;
   ptcb->exited = 0;
-  assert(ptcb != NULL);
+
+  // Initializes PTCB node and pushes it back to the ptcbs list in PCB
   rlnode_init(&ptcb->list_node, ptcb);
   rlist_push_back(&newproc->ptcbs, &ptcb->list_node);
 
