@@ -32,11 +32,11 @@
 
 /** @brief Thread state.
 
-   A value of this type, together with a @c Thread_phase value, completely
-   determines the state of the current API.
+  A value of this type, together with a @c Thread_phase value, completely
+  determines the state of the current API.
 
-   @see Thread_phase
- */
+  @see Thread_phase
+*/
 typedef enum {
   INIT,    /**< TCB initialising */
   READY,   /**< A thread ready to be scheduled.   */
@@ -47,8 +47,8 @@ typedef enum {
 
 /** @brief Thread phase.
 
-   @see Thread_state
- */
+  @see Thread_state
+*/
 typedef enum {
   CTX_CLEAN, /**< Means that, the context stored in the TCB is up-to-date. */
   CTX_DIRTY  /**< Means that, the context stored in the TCN is garbage. */
@@ -81,11 +81,12 @@ enum SCHED_CAUSE {
 /**
    @brief The thread control block
 
-   An object of this type is associated to every thread. In this object
-   are stored all the metadata that relate to the thread.
- */
+  An object of this type is associated to every thread. In this object
+  are stored all the metadata that relate to the thread.
+*/
 typedef struct thread_control_block {
-  PCB *owner_pcb; /**< This is null for a free TCB */
+  PCB *owner_pcb;   /**< This is null for a free TCB */
+  PTCB *owner_ptcb; /*May be necessary*/
 
   cpu_context_t context; /**< The thread context */
 

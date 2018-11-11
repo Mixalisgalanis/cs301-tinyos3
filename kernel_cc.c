@@ -12,7 +12,7 @@
 
 	@brief The implementation for concurrency control .
 
-	Locks for scheduler and device drivers. Because we support 
+	Locks for scheduler and device drivers. Because we support
     multiple cores, we need to avoid race conditions
     with an interrupt handler on the same core, and also to
     avoid race conditions between cores.
@@ -39,13 +39,13 @@ void Mutex_Lock(Mutex* lock)
   while(__atomic_test_and_set(lock,__ATOMIC_ACQUIRE)) {
     int spin=MUTEX_SPINS;
     while(__atomic_load_n(lock, __ATOMIC_RELAXED)) {
-      __builtin_ia32_pause();      
-      if(spin>0) 
-      	spin--; 
-      else { 
-      	spin=MUTEX_SPINS; 
+      __builtin_ia32_pause();
+      if(spin>0)
+      	spin--;
+      else {
+      	spin=MUTEX_SPINS;
       	if(get_core_preemption())
-      		yield(SCHED_MUTEX); 
+      		yield(SCHED_MUTEX);
       }
     }
   }
@@ -60,7 +60,7 @@ void Mutex_Unlock(Mutex* lock)
 
 
 /*
-	Condition variables.	
+	Condition variables.
 */
 
 
@@ -69,7 +69,7 @@ typedef struct __cv_waiter {
 	rlnode node;				/* become part of a ring */
 	TCB* thread;				/* thread to wait */
 	sig_atomic_t signalled;		/* this is set if the thread is signalled */
-	sig_atomic_t removed;		/* this is set if the waiter is removed 
+	sig_atomic_t removed;		/* this is set if the waiter is removed
 								   from the ring */
 } __cv_waiter;
 /** \endcond */
@@ -89,22 +89,22 @@ static inline void remove_from_ring(CondVar* cv, __cv_waiter* w)
 }
 
 
-/** 
+/**
    @internal
-   @brief Wait on a condition variable, specifying the cause. 
+   @brief Wait on a condition variable, specifying the cause.
 
 	This function is the basic implementation for the 'wait' operation on
 	condition variables. It is used to implement the @c Cond_Wait and @c Cond_TimedWait
 	system calls, as well as internal kernel 'wait' functionality.
 
-  The function must be called only while we have locked the mutex that 
-  is associated with this call. It will put the calling thread to sleep, 
-  unlocking the mutex. These operations happen atomically.  
+  The function must be called only while we have locked the mutex that
+  is associated with this call. It will put the calling thread to sleep,
+  unlocking the mutex. These operations happen atomically.
 
-  When the thread is woken up later (by another thread that calls @c 
+  When the thread is woken up later (by another thread that calls @c
   Cond_Signal or @c Cond_Broadcast, or because the timeout has expired, or
-  because the thread was awoken by another kernel routine), 
-  it first re-locks the mutex and then returns.  
+  because the thread was awoken by another kernel routine),
+  it first re-locks the mutex and then returns.
 
   @param mx The mutex to be unlocked as the thread sleeps.
   @param cv The condition variable to sleep on.
@@ -116,7 +116,7 @@ static inline void remove_from_ring(CondVar* cv, __cv_waiter* w)
   @see Cond_Signal
   @see Cond_Broadcast
   */
-static int cv_wait(Mutex* mutex, CondVar* cv, 
+static int cv_wait(Mutex* mutex, CondVar* cv,
 		enum SCHED_CAUSE cause, TimerDuration timeout)
 {
 	__cv_waiter waiter = { .thread=CURTHREAD, .signalled = 0, .removed=0 };
@@ -152,8 +152,8 @@ static int cv_wait(Mutex* mutex, CondVar* cv,
 
 /**
   @internal
-  Helper for Cond_Signal and Cond_Broadcast. This method 
-  will actually find a waiter to signal, if one exists. 
+  Helper for Cond_Signal and Cond_Broadcast. This method
+  will actually find a waiter to signal, if one exists.
   Else, it leaves the cv->waitset == NULL.
  */
 static inline void cv_signal(CondVar* cv)
@@ -205,15 +205,15 @@ void Cond_Broadcast(CondVar* cv)
 
 /*
  *  Pre-emption control
- */ 
+ */
 int set_core_preemption(int preempt)
 {
 	sig_atomic_t old_preempt;
 	if(preempt) {
 		old_preempt = __atomic_exchange_n(& CURCORE.preemption, preempt, __ATOMIC_RELAXED);
 		cpu_enable_interrupts();
-	} 
-	else {				
+	}
+	else {
 		cpu_disable_interrupts();
 		old_preempt = __atomic_exchange_n(& CURCORE.preemption, preempt, __ATOMIC_RELAXED);
 	}
@@ -239,7 +239,7 @@ int get_core_preemption()
  * @brief The kernel lock.
  *
  * Kernel locking is provided by a semaphore, implemented as a monitor.
- * A semaphre for kernel locking has the advantage that 
+ * A semaphre for kernel locking has the advantage that
  */
 
 /* This mutex is used to implement the kernel semaphore as a monitor. */
@@ -269,13 +269,13 @@ void kernel_unlock()
 	Mutex_Unlock(& kernel_mutex);
 }
 
-int kernel_wait_wchan(CondVar* cv, enum SCHED_CAUSE cause, 
+int kernel_wait_wchan(CondVar* cv, enum SCHED_CAUSE cause,
 	const char* wchan_name, TimerDuration timeout)
 {
 	/* Atomically release kernel semaphore */
 	Mutex_Lock(& kernel_mutex);
 	kernel_sem++;
-	Cond_Signal(&kernel_sem_cv);	
+	Cond_Signal(&kernel_sem_cv);
 
 	int ret = cv_wait(&kernel_mutex, cv, cause, timeout);
 
@@ -283,19 +283,19 @@ int kernel_wait_wchan(CondVar* cv, enum SCHED_CAUSE cause,
 	while(kernel_sem<=0)
 		Cond_Wait(& kernel_mutex, &kernel_sem_cv);
 	kernel_sem--;
-	Mutex_Unlock(& kernel_mutex);		
+	Mutex_Unlock(& kernel_mutex);
 
 	return ret;
 }
 
-void kernel_signal(CondVar* cv) 
-{ 
-	Cond_Signal(cv); 
+void kernel_signal(CondVar* cv)
+{
+	Cond_Signal(cv);
 }
 
-void kernel_broadcast(CondVar* cv) 
-{ 
-	Cond_Broadcast(cv); 
+void kernel_broadcast(CondVar* cv)
+{
+	Cond_Broadcast(cv);
 }
 
 void kernel_sleep(Thread_state newstate, enum SCHED_CAUSE cause)
@@ -305,7 +305,3 @@ void kernel_sleep(Thread_state newstate, enum SCHED_CAUSE cause)
 	Cond_Signal(&kernel_sem_cv);
 	sleep_releasing(newstate, &kernel_mutex, cause, NO_TIMEOUT);
 }
-
-
-
-

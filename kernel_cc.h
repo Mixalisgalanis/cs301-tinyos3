@@ -16,14 +16,14 @@
 	@ingroup kernel
 	@brief Concurrency and preemption control API.
 
-	This file provides routines for concurrency control and preemption management. 
+	This file provides routines for concurrency control and preemption management.
 */
 
 
 
 
-/* 
-	Many of the header definitions for Mutexes and CondVars are in the 
+/*
+	Many of the header definitions for Mutexes and CondVars are in the
    	tinyos.h file
 */
 #include "kernel_sys.h"
@@ -51,7 +51,7 @@ void kernel_unlock();
 	@brief Wait on a condition variable using the kernel lock.
 	@returns 1 if signalled, 0 if not
   */
-int kernel_wait_wchan(CondVar* cv, enum SCHED_CAUSE cause, 
+int kernel_wait_wchan(CondVar* cv, enum SCHED_CAUSE cause,
 	const char* wchan, TimerDuration timeout);
 
 #define kernel_wait(cv, cause) \
@@ -62,7 +62,7 @@ int kernel_wait_wchan(CondVar* cv, enum SCHED_CAUSE cause,
 /**
 	@brief Signal a kernel condition to one waiter.
 
-	This call must be made 
+	This call must be made
   */
 void kernel_signal(CondVar* cv);
 
@@ -84,20 +84,20 @@ void kernel_sleep(Thread_state state, enum SCHED_CAUSE cause);
 
 /** @brief Set the preemption status for the current thread.
 
- 	Depending on the value of the argument, this function will set preemption on 
- 	or off. 
- 	Preemption is disabled by disabling interrupts. This function is usually called 
+ 	Depending on the value of the argument, this function will set preemption on
+ 	or off.
+ 	Preemption is disabled by disabling interrupts. This function is usually called
  	via the convenience macros @c preempt_on and @c preempt_off.
 	A typical non-preemptive section is declared as
 	@code
 	int preempt = preempt_off;
 	..
-	    // do stuff without preemption 
+	    // do stuff without preemption
 	...
 	if(preempt) preempt_on;
 	@endcode
 
-	@param preempt  the new preemption status 
+	@param preempt  the new preemption status
  	@returns the previous preemption status, where 0 means that preemption was previously off,
  	and 1 means that it was on.
 
@@ -127,5 +127,3 @@ int get_core_preemption();
 
 
 #endif
-
-
