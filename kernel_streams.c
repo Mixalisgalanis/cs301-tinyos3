@@ -69,29 +69,35 @@ int FCB_reserve(size_t num, Fid_t *fid, FCB** fcb)
     uint i;
 
     /* Find distinct fids */
+
+    /*i reserve epistrefei 0 se periptwsi apotixias kai 1 epitixia*/
+
+    /*ousiastika ayti i for anazitei toses kenes theseis sto FIDT
+    oses ta fcb pou thelw na desmeysw
+    to fid ferei tis times twn (px 2) prwtwn kenwn thesewn pou vrikame sto FIDT*/
     for(i=0; i<num; i++) {
-	while(f<MAX_FILEID && cur->FIDT[f]!=NULL)
-	    f++;
-	if(f==MAX_FILEID) break;
-	fid[i] = f; f++;
+    	while(f<MAX_FILEID && cur->FIDT[f]!=NULL)
+	       f++;
+	    if(f==MAX_FILEID) break;
+	    fid[i] = f; f++;
     }
-    if(i<num) return 0;
+    if(i<num) return 0; //se periptwsi pou den vrei epistrefei 0
     /* Allocate FCBs */
-    for(i=0;i<num;i++)
-	if((fcb[i] = acquire_FCB()) == NULL)
-	    break;
-    if(i<num) {
-	/* Roll back */
-	while(i>0) {
-	    release_FCB(fcb[i-1]);
-	    i--;
-	}
-	return 0;
+    for(i=0;i<num;i++)  //edw apoktaei apo to FCB_freelist tosa FCBs osa theloume
+	   if((fcb[i] = acquire_FCB()) == NULL)
+	      break;
+    if(i<num) { //an den vrei osa FCB theloume tote ta epistrefei sti FCB_freeelist kai epistrefei 0
+    	/* Roll back */
+    	while(i>0) {
+    	    release_FCB(fcb[i-1]);
+    	    i--;
+    	}
+    	return 0;
     }
     /* Found all */
-    for(i=0;i<num;i++) {
-	cur->FIDT[fid[i]]=fcb[i];
-	FCB_incref(fcb[i]);
+    for(i=0;i<num;i++) { //an ola pane kala tote vazei sti keni thesi tou FIDT to FCB pou apoktisame
+    	cur->FIDT[fid[i]]=fcb[i];
+    	FCB_incref(fcb[i]);
     }
     return 1;
 }
@@ -134,7 +140,7 @@ int sys_Read(Fid_t fd, char *buf, unsigned int size)
   int (*devread)(void*,char*,uint);
   void* sobj;
 
-  
+
   /* Get the fields from the stream */
   FCB* fcb = get_fcb(fd);
 
@@ -142,17 +148,17 @@ int sys_Read(Fid_t fd, char *buf, unsigned int size)
     sobj = fcb->streamobj;
     devread = fcb->streamfunc->Read;
 
-    /* make sure that the stream will not be closed (by another thread) 
+    /* make sure that the stream will not be closed (by another thread)
        while we are using it! */
     FCB_incref(fcb);
-  
+
     if(devread)
       retcode = devread(sobj, buf, size);
 
     /* Need to decrease the reference to FCB */
     FCB_decref(fcb);
   }
-  
+
   /* We must not go into non-preemptive domain with kernel_mutex locked */
 
 
@@ -166,7 +172,7 @@ int sys_Write(Fid_t fd, const char *buf, unsigned int size)
   int (*devwrite)(void*, const char*, uint) = NULL;
   void* sobj = NULL;
 
-  
+
   /* Get the fields from the stream */
   FCB* fcb = get_fcb(fd);
 
@@ -175,10 +181,10 @@ int sys_Write(Fid_t fd, const char *buf, unsigned int size)
     sobj = fcb->streamobj;
     devwrite = fcb->streamfunc->Write;
 
-    /* make sure that the stream will not be closed (by another thread) 
+    /* make sure that the stream will not be closed (by another thread)
        while we are using it! */
     FCB_incref(fcb);
-  
+
 
     if(devwrite)
       retcode = devwrite(sobj, buf, size);
@@ -201,7 +207,7 @@ int sys_Close(int fd)
 
   if(fcb) {
     CURPROC->FIDT[fd] = NULL;
-    retcode = FCB_decref(fcb);    
+    retcode = FCB_decref(fcb);
   }
 
   return retcode;
@@ -256,12 +262,12 @@ Fid_t open_stream(Device_type major, unsigned int minor)
 
   if(! FCB_reserve(1, &fid, &fcb))
       goto finerr;
-  
+
   if(device_open(major, minor, & fcb->streamobj, &fcb->streamfunc)) {
       FCB_unreserve(1, &fid, &fcb);
       goto finerr;
   }
-  
+
   goto finok;
 finerr:
   fid = NOFILE;
@@ -280,4 +286,3 @@ Fid_t sys_OpenTerminal(unsigned int termno)
 {
   return open_stream(DEV_SERIAL, termno);
 }
-
