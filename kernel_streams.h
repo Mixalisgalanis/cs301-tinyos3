@@ -47,6 +47,20 @@ typedef struct file_control_block
 } FCB;
 
 
+#define BUF_SIZE 8192; /**size of the buffer */
+
+typedef struct pipe_control_block{
+  char BUFFER[BUF_SIZE]; /**The Buffer itself*/
+
+  uint w; /**Write index of buffer*/
+  uint r; /**Read index of buffer*/
+
+  FCB* reader; /**Read End of the Pipe */
+  FCB* writer; /**Write End of the Pipe */
+
+  CondVar empty; /** */
+  CondVar full; /** */
+} PIPECB;
 
 /**
   @brief Initialization for files and streams.
