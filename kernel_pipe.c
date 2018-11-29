@@ -98,18 +98,18 @@ int rpipe_read(void* pipe, const char *buf, unsigned int size){
 int wpipe_write(void* pipe, const char *buf, unsigned int size){
 	PIPECB* pipecb=(PIPECB*)pipe;
 
-	uint read_bytes = BUF_SIZE-(pipecb->w - pipe->r);
-	uint read_size =size;
+	uint write_bytes = BUF_SIZE-(pipecb->w - pipe->r);
+	uint write_size =size;
 	int step=0;
-	while(read_bytes==0){
+	while(write_bytes==0){
 		Cond_Broadcast(&pipecb->cv_reader);
 		kernel_wait(&pipecb->cv_writer);
-		read_bytes =BUF_SIZE-(pipecb->w - pipe->r);
+		write_bytes =BUF_SIZE-(pipecb->w - pipe->r);
 	}
 	int max;
-	while (read_bytes > 0 && read_size > 0) {
+	while (write_bytes > 0 && write_size > 0) {
 		/* code */
-		max = (read_size <= read_bytes)? read_size:read_bytes;
+		max = (write_size <= write_bytes)? write_size:write_bytes;
 		for (int  i = 0; i < max; i++) {
 			/* code */
 			if (pipecb->r2 >= BUF_SIZE)
@@ -120,9 +120,9 @@ int wpipe_write(void* pipe, const char *buf, unsigned int size){
 			pipecb->r2++;
 		}
 		Cond_Broadcast(&pipecb->cv_reader);
-		read_size -= max - 1;
+		write_size -= max - 1;
 		step += max - 1;
-		read_bytes = BUF_SIZE-(pipecb->w - pipe->r);
+		write_bytes = BUF_SIZE-(pipecb->w - pipe->r);
 
 	}
 
