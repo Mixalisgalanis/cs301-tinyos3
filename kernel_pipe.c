@@ -62,31 +62,32 @@ int rpipe_read(void* pipe, const char *buf, unsigned int size){
 
 	PIPECB* pipecb=(PIPECB*)pipe;
 
-	uint read_bytes = pipecb->w - pipe->r;
-	uint read_size =size;
+	uint read_bytes = pipecb->w - pipe->r;	//o arithmos twn bytes pou prepei na diavasw
+	uint read_size = size;
 	int step=0;
-	while(read_bytes==0){
+	while(read_bytes==0){	//an den exw grapsei kati ston buffer perimenw mexri na grapsei o writer
 		Cond_Broadcast(&pipecb->cv_writer);
 		kernel_wait(&pipecb->cv_reader);
 		read_bytes = pipecb->w - pipe->r;
 	}
 	int max;
-	while (read_bytes > 0 && read_size > 0) {
+	while (read_bytes > 0 && read_size > 0) {	//i deyteri sinthiki einai gia an to read_bytes<read_size
 		/* code */
-		max = (read_size <= read_bytes)? read_size:read_bytes;
+		max = (read_size <= read_bytes)? read_size:read_bytes;	//epilegw ti megisti timi me tavani to read_size
 		for (int  i = 0; i < max; i++) {
 			/* code */
 			if (pipecb->r2 >= BUF_SIZE)
 				pipecb->r2 = 0;
 
-			buf[i+step] = pipecb->BUFFER[pipecb->r2];
-			pipecb->r++;
+			buf[i+step] = pipecb->BUFFER[pipecb->r2];	//gt yparxei i periptwsi o writer na vazei px 60-60 ta chars ston buffer
+			pipecb->r++;							    //epomemws thelw na xerw se poio simeio tou buffer vriskomai gt panwgrafei
+														//afou prwta gemisei
 			pipecb->r2++;
 		}
 		Cond_Broadcast(&pipecb->cv_writer);
 		read_size -= max - 1;
 		step += max - 1;
-		read_bytes = pipecb->w - pipe->r;
+		read_bytes = pipecb->w - pipe->r;	//gia na dw an egrapse xana o writer
 
 	}
 
