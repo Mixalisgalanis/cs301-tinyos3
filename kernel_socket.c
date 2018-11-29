@@ -1,6 +1,6 @@
 
 #include "tinyos.h"
-
+#define FCB_SOCKETS 1
 
 Fid_t sys_Socket(port_t port)
 {
@@ -29,4 +29,3 @@ int sys_ShutDown(Fid_t sock, shutdown_mode how)
 {
 	return -1;
 }
-

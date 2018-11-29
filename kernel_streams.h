@@ -55,11 +55,14 @@ typedef struct pipe_control_block{
   uint w; /**Write index of buffer*/
   uint r; /**Read index of buffer*/
 
+  uint w2;
+  uint r2;
+
   FCB* reader; /**Read End of the Pipe */
   FCB* writer; /**Write End of the Pipe */
 
-  CondVar empty; /** */
-  CondVar full; /** */
+  CondVar cv_reader; /** */
+  CondVar cv_writer; /** */
 } PIPECB;
 
 /**

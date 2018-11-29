@@ -37,7 +37,7 @@ int nulldev_write(void* dev, const char* buf, unsigned int size)
 }
 
 
-int nulldev_close(void* dev) 
+int nulldev_close(void* dev)
 {
   return 0;
 }
@@ -84,7 +84,7 @@ void serial_rx_handler()
 {
   int pre = preempt_off;
 
-  /* 
+  /*
     We do not know which terminal is
     ready, so we must signal them all !
    */
@@ -108,7 +108,7 @@ int serial_read(void* dev, char *buf, unsigned int size)
 
   while(count<size) {
     int valid = bios_read_serial(dcb->devno, &buf[count]);
-    
+
     if (valid) {
       count++;
     }
@@ -135,8 +135,8 @@ void serial_tx_handler()
   /* There is nothing to do */
 }
 
-/* 
-  Write call 
+/*
+  Write call
   This is currently a polling driver.
 */
 int serial_write(void* dev, const char* buf, unsigned int size)
@@ -149,7 +149,7 @@ int serial_write(void* dev, const char* buf, unsigned int size)
 
     if(success) {
       count++;
-    } 
+    }
     else if(count==0)
     {
       yield(SCHED_IO);
@@ -158,11 +158,11 @@ int serial_write(void* dev, const char* buf, unsigned int size)
       break;
   }
 
-  return count;  
+  return count;
 }
 
 
-int serial_close(void* dev) 
+int serial_close(void* dev)
 {
   return 0;
 }
@@ -171,7 +171,7 @@ int serial_close(void* dev)
 void* serial_open(uint term)
 {
   assert(term<bios_serial_ports());
-  return & serial_dcb[term];  
+  return & serial_dcb[term];
 }
 
 
@@ -220,7 +220,7 @@ void initialize_devices()
 
 int device_open(Device_type major, uint minor, void** obj, file_ops** ops)
 {
-  assert(major < DEV_MAX);  
+  assert(major < DEV_MAX);
   if(minor >= devtable[major].devnum)
     return -1;
   *obj = devtable[major].dev_fops.Open(minor);
@@ -232,5 +232,3 @@ uint device_no(Device_type major)
 {
   return devtable[major].devnum;
 }
-
-

@@ -18,11 +18,11 @@ static int stdio_read(void* __this, char *buf, unsigned int size)
 	while(1) {
 		ret = fread_unlocked(buf, 1, size, saved_in);
 
-		if(ferror_unlocked(saved_in)) {			
+		if(ferror_unlocked(saved_in)) {
 			//assert(errno==EINTR);
 			if(errno!=EINTR) {
 				char buf[101];
-				fprintf(stderr, "error: %s\n",strerror_r(errno, buf, 100));				
+				fprintf(stderr, "error: %s\n",strerror_r(errno, buf, 100));
 			}
 			clearerr_unlocked(saved_in);
 		} else {
@@ -44,7 +44,7 @@ file_ops __stdio_ops = {
 	.Read = stdio_read,
 	.Write = stdio_write,
 	.Close = stdio_close
-};
+ };
 
 void tinyos_pseudo_console()
 {
