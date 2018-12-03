@@ -4,6 +4,48 @@
 #include "kernel_streams.h"
 #include <assert.h>
 
+static file_ops proc_info_file_ops = {
+	.Open = NULL,
+	.Read = system_info_read, //dikia mas proc_info_read
+	.Write = NULL,
+	.Close = proc_info_close //apla kanei release to proc_info_control_block
+};
+
+
+Fid_t OpenInfo(){
+
+for(int i=0; i<MAX_PROC; i++){
+  if(PT[i]==NOPROC){
+
+  }
+}
+
+//vazw ton deikti na deixnei sto 0 (ksekinaw apo to PT[0])
+//elegxw an to kathe PT[i] einai alive h zombie (==NO RPOC)
+
+//an den einai NOPROC (einai alive):
+//pare ta dedomena toy PCB sto PT[i] kai metefere ta mesa sto control block sto
+//proc_info tou control block, PID, PPID, thread count, Task, argl, args
+
+
+//reserve(?)
+//ftiaxnei fid
+//reserve ena FCB
+//sto streamobj toy FCB tha valoume to proc_info_control_block
+//sto streamfunc tha valoume ta dika mas func
+}
+
+
+
+void system_info_read(){
+
+
+
+  //memcopy
+}
+
+
+
 /*
  The process table and related system calls:
  - Exec
