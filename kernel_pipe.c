@@ -127,6 +127,42 @@ int wpipe_write(void* pipe, const char *buf, unsigned int size){
 	}
 
 	return size-read_size;
+}
 
+void rpipe_close(void* pipe){
 
+	PIPECB* pipecb=(PIPECB*)pipe;
+
+	if(pipecb->reader->refcount==0){
+
+		pipecb->reader=NULL;
+
+		if(pipecb->writer=NULL){
+			free(pipecb);
+
+		}else{
+
+			Cond_Broadcast(&pipecb->cv_writer);
+
+		}
+	}
+}
+
+void wpipe_close(void* pipe){
+
+	PIPECB* pipecb=(PIPECB*)pipe;
+
+	if(pipecb->writer->refcount==0){
+
+		pipecb->writer=NULL;
+
+		if(pipecb->reader+NULL){
+			free(pipecb);
+
+		}else{
+
+			Cond_Broadcast(&pipecb->cv_reader);
+
+		}
+	}
 }

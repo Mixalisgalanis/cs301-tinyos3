@@ -49,7 +49,7 @@ typedef struct file_control_block
 
 #define BUF_SIZE 8192; /**size of the buffer */
 
-typedef struct pipe_control_block{
+typedef struct pipe_cont                                                                                                                                     rol_block{
   char BUFFER[BUF_SIZE]; /**The Buffer itself*/
 
   uint w; /**Write index of buffer*/
