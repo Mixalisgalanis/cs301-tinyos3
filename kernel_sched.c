@@ -11,6 +11,8 @@
 #include <valgrind/valgrind.h>
 #endif
 
+int num_of_threads;
+
 /*
    The thread layout.
   --------------------
@@ -108,7 +110,7 @@ static void thread_start() {
 TCB *spawn_thread(PCB *pcb, void (*func)()) {
   /* The allocated thread size must be a multiple of page size */
   TCB *tcb = (TCB *)allocate_thread(THREAD_SIZE);
-
+  num_of_threads++;
   /* Set the owner */
   tcb->owner_pcb = pcb;
 
@@ -149,6 +151,8 @@ void release_TCB(TCB *tcb) {
 #endif
 
   free_thread(tcb, THREAD_SIZE);
+
+  num_of_threads--;
 
   Mutex_Lock(&active_threads_spinlock);
   active_threads--;

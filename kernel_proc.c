@@ -3,6 +3,8 @@
 #include "kernel_proc.h"
 #include "kernel_streams.h"
 #include <assert.h>
+#include <tinyos.h>
+
 
 static file_ops proc_info_file_ops = {
 	.Open = NULL,
@@ -10,31 +12,6 @@ static file_ops proc_info_file_ops = {
 	.Write = NULL,
 	.Close = proc_info_close //apla kanei release to proc_info_control_block
 };
-
-
-Fid_t OpenInfo(){
-
-for(int i=0; i<MAX_PROC; i++){
-  if(PT[i]==NOPROC){
-
-  }
-}
-
-//vazw ton deikti na deixnei sto 0 (ksekinaw apo to PT[0])
-//elegxw an to kathe PT[i] einai alive h zombie (==NO RPOC)
-
-//an den einai NOPROC (einai alive):
-//pare ta dedomena toy PCB sto PT[i] kai metefere ta mesa sto control block sto
-//proc_info tou control block, PID, PPID, thread count, Task, argl, args
-
-
-//reserve(?)
-//ftiaxnei fid
-//reserve ena FCB
-//sto streamobj toy FCB tha valoume to proc_info_control_block
-//sto streamfunc tha valoume ta dika mas func
-}
-
 
 
 void system_info_read(){
@@ -361,4 +338,43 @@ void sys_Exit(int exitval) {
   kernel_sleep(EXITED, SCHED_USER);
 }
 
-Fid_t sys_OpenInfo() { return NOFILE; }
+Fid_t sys_OpenInfo() {
+
+	Fid_t fid;
+	FCB* fcb;
+
+	PICB* picb=(PICB*)xmalloc(sizeof(PICB));
+	procinfo* prinfo=(procinfo*)xmalloc(sizeof(procinfo));
+
+	if(FCB_reserve(1, &fid, &fcb)==1){ //i reserve pairnei ws orismata pointers, stis alles den exoume "&" epeidi einai pinakes
+
+	fcb->streamobj=picb;
+	fcb->streamfunc=&proc_info_file_ops;
+
+	for(int i=0; i<MAX_PROC; i++){
+		if(PT[i]->pstate==ALIVE){ //den eimai sigouros an einai swsto				prinfo->pid=get_pid(&PT[i]);
+			prinfo->ppid=(PT[i]->parent == NULL) ? NULL : get_Pid(&PT[i]->parent); //ayto to kanoume gia tous pointers gt mporei na min deixnei se null an den yparxei
+			prinfo->alive=1; //pairnei 1 gia alive 0 gia zombie, arxikopoioume mono an einai alive, ara 1
+			prinfo->thread_count=num_of_threads;	//den eimai sigouros, dilwmeni sto sched.c
+			prinfo->main_task=PT[i]->main_task;
+			prinfo->argl=PT[i]->argl;
+			prinfo->args=(PT[i]->args == NULL) ? NULL : PT[i]->args;
+
+			char buf[sizeof(procinfo)];
+
+			memcpy();
+
+		}
+	}
+
+	return fid;
+	}
+	else{
+		return NOFILE;
+	}
+}
+
+void proc_info_close(void* prin){
+	procinfo* prinfo=(procinfo*)prin;
+	free(prinfo);
+}

@@ -731,13 +731,27 @@ typedef struct procinfo
             Note that this is the
             real argument length, not just the length of the @c args field, which is
             limited at @c PROCINFO_MAX_ARGS_SIZE. */
-	char args[PROCINFO_MAX_ARGS_SIZE]; /**< @brief The first
+	char args[PROCINFO_MAX_ARGS_SIZE]; /**< @brief The first //128
     @c PROCINFO_MAX_ARGS_SIZE bytes of the argument of the main task.
 
     If the task's argument is longer (as designated by the @c argl field), the
     bytes contained in this field are just the prefix.  */
 } procinfo;
 
+typedef struct proc_info_control_block {
+//ti prepei na periexei?
+
+//mia structure proc info
+//ena deikti poy na leei mexri poy exw diabasei apto PT
+
+  //procinfo pi;
+  //PCB* current_pcb;
+
+  uint writer;
+  uint reader;
+  char BUFFER[MAX_PROC*sizeof(procinfo)];
+
+} PICB;
 
 /**
 	@brief Open a kernel information stream.

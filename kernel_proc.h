@@ -84,20 +84,6 @@ typedef struct p_thread_control_block { //orisame to block tou ptcb
 
 } PTCB;
 
-typedef struct proc_info_control_block {
-//ti prepei na periexei?
-
-//mia structure proc info
-//ena deikti poy na leei mexri poy exw diabasei apto PT
-
-  procinfo pi;
-  PCB* current_pcb;
-
-
-} PICB;
-
-
-
 
 /**
   @brief Initialize the process table.
