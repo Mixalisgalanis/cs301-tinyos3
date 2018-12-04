@@ -5,24 +5,6 @@
 #include <assert.h>
 #include <tinyos.h>
 
-
-static file_ops proc_info_file_ops = {
-	.Open = NULL,
-	.Read = system_info_read, //dikia mas proc_info_read
-	.Write = NULL,
-	.Close = proc_info_close //apla kanei release to proc_info_control_block
-};
-
-
-void system_info_read(){
-
-
-
-  //memcopy
-}
-
-
-
 /*
  The process table and related system calls:
  - Exec
@@ -338,6 +320,14 @@ void sys_Exit(int exitval) {
   kernel_sleep(EXITED, SCHED_USER);
 }
 
+static file_ops proc_info_file_ops = {
+	.Open = NULL,
+	.Read = system_info_read, //dikia mas proc_info_read
+	.Write = NULL,
+	.Close = proc_info_close //apla kanei release to proc_info_control_block
+};
+
+
 Fid_t sys_OpenInfo() {
 
 	Fid_t fid;
@@ -350,19 +340,22 @@ Fid_t sys_OpenInfo() {
 
 	fcb->streamobj=picb;
 	fcb->streamfunc=&proc_info_file_ops;
+	picb->reader = 0;
 
 	for(int i=0; i<MAX_PROC; i++){
-		if(PT[i]->pstate==ALIVE){ //den eimai sigouros an einai swsto				prinfo->pid=get_pid(&PT[i]);
-			prinfo->ppid=(PT[i]->parent == NULL) ? NULL : get_Pid(&PT[i]->parent); //ayto to kanoume gia tous pointers gt mporei na min deixnei se null an den yparxei
+		if(PT[i].pstate==ALIVE){ //get_pcb(&PT[i]!=NOPROC)
+			prinfo->pid=get_pid(&PT[i]);
+			prinfo->ppid=(PT[i].parent == NULL) ? NULL : get_pid(&PT[i].parent); //ayto to kanoume gia tous pointers gt mporei na min deixnei se null an den yparxei
 			prinfo->alive=1; //pairnei 1 gia alive 0 gia zombie, arxikopoioume mono an einai alive, ara 1
-			prinfo->thread_count=num_of_threads;	//den eimai sigouros, dilwmeni sto sched.c
-			prinfo->main_task=PT[i]->main_task;
-			prinfo->argl=PT[i]->argl;
-			prinfo->args=(PT[i]->args == NULL) ? NULL : PT[i]->args;
+			prinfo->thread_count=rlist_len(PT[i].ptcbs);
+			prinfo->main_task=PT[i].main_task;
+			prinfo->argl=PT[i].argl;
+			prinfo->args=(PT[i].args == NULL) ? NULL : PT[i].args;
 
-			char buf[sizeof(procinfo)];
+			char array[sizeof(procinfo)];
 
-			memcpy();
+			memcpy(array, (char*)prinfo, sizeof(procinfo));
+			system_info_read(picb, array, sizeof(procinfo));
 
 		}
 	}
@@ -372,6 +365,18 @@ Fid_t sys_OpenInfo() {
 	else{
 		return NOFILE;
 	}
+}
+
+int system_info_read(void* pr_in_cb, const char *array, unsigned int size){
+
+	PICB* picb=(PICB*)pr_in_cb;
+
+	int j = 0;
+	for(int i=picb->reader; i<size + picb->reader; i++){
+		picb->BUFFER[i]=array[j];
+		j++;
+	}
+	picb->reader += size;
 }
 
 void proc_info_close(void* prin){
