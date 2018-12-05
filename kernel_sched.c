@@ -276,8 +276,7 @@ static TCB *sched_queue_select() {
     }
   }
 
-  return sel == NULL ? NULL
-                     : sel->tcb; /* When the list is empty, this is NULL */
+  return sel == NULL ? NULL: sel->tcb; /* When the list is empty, this is NULL */
 }
 
 /*
@@ -435,7 +434,7 @@ void yield(enum SCHED_CAUSE cause) {
   next->prev = current;
 
   Mutex_Unlock(&sched_spinlock);
-
+  sched_queue_evaluate(cause);
   /* Switch contexts */
   if (current != next) {
     CURTHREAD = next;
@@ -443,7 +442,7 @@ void yield(enum SCHED_CAUSE cause) {
   }
 
   // Calculates new priority of the current thread
-  sched_queue_evaluate(cause);
+
   // Increases priority and checks if priority threshold has been reached to
   // then apply the anti_starvation_policy
   if (++ageCounter >= MAX_AGE_COUNTER) {

@@ -529,7 +529,14 @@ typedef struct pipe_s {
 	@returns 0 on success, or -1 on error. Possible reasons for error:
 		- the available file ids for the process are exhausted.
 */
+typedef struct file_control_block FCB;
+
 int Pipe(pipe_t* pipe);
+
+int rpipe_read(void* pipe, char *buf, unsigned int size);
+int wpipe_write(void* pipe, const char *buf, unsigned int size);
+int rpipe_close(void* pipe);
+int  wpipe_close(void* pipe);
 
 /*******************************************
  *
@@ -747,8 +754,8 @@ typedef struct proc_info_control_block {
   //procinfo pi;
   //PCB* current_pcb;
 
-  uint writer;
-  uint reader;
+  int writer;
+  int reader;
   char BUFFER[MAX_PROC*sizeof(procinfo)];
 
 } PICB;
@@ -773,7 +780,8 @@ typedef struct proc_info_control_block {
  */
 Fid_t OpenInfo();
 
-
+int system_info_read(void* pr_in_cb, char *array, unsigned int size);
+int  proc_info_close(void* prin);
 
 
 /*******************************************

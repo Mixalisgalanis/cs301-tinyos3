@@ -47,16 +47,16 @@ typedef struct file_control_block
 } FCB;
 
 
-#define BUF_SIZE 8192; /**size of the buffer */
+#define BUF_SIZE 8192
 
-typedef struct pipe_cont                                                                                                                                     rol_block{
-  char BUFFER[BUF_SIZE]; /**The Buffer itself*/
+typedef struct pipe_control_block{
+  char BUFFER [BUF_SIZE]; /**The Buffer itself*/
 
-  uint w; /**Write index of buffer*/
-  uint r; /**Read index of buffer*/
+  int w; /**Write index of buffer*/
+  int r; /**Read index of buffer*/
 
-  uint w2;
-  uint r2;
+  int w2;
+  int r2;
 
   FCB* reader; /**Read End of the Pipe */
   FCB* writer; /**Write End of the Pipe */
