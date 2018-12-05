@@ -1,20 +1,19 @@
 #include "tinyos.h"
 #include "kernel_streams.h"
-#include "kernel_sched.h"
 #include "kernel_cc.h"
 #include "kernel_dev.h"
 
 
 #define FCB_PIPES 2
 
-static file_ops reader_file_ops = {
+ file_ops reader_file_ops = {
 	.Open = NULL,
 	.Read = rpipe_read,
 	.Write = NULL,
 	.Close = rpipe_close
 };
 
-static file_ops writer_file_ops = {
+ file_ops writer_file_ops = {
 	.Open = NULL,
 	.Read = NULL,
 	.Write = wpipe_write,

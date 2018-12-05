@@ -320,7 +320,7 @@ void sys_Exit(int exitval) {
   kernel_sleep(EXITED, SCHED_USER);
 }
 
-static file_ops proc_info_file_ops = {
+ file_ops proc_info_file_ops = {
 	.Open = NULL,
 	.Read = system_info_read, //dikia mas proc_info_read
 	.Write = NULL,
@@ -341,7 +341,7 @@ Fid_t sys_OpenInfo() {
 	fcb->streamobj=picb;
 	fcb->streamfunc=&proc_info_file_ops;
 	picb->reader = 0;
-	picb->writer=0;
+	picb->writer = 0;
 	for(int i=0; i<MAX_PROC; i++){
 		PCB* pcb= &PT[i];
 		if(pcb->pstate!=FREE){ //get_pcb(&PT[i]!=NOPROC)
@@ -349,7 +349,7 @@ Fid_t sys_OpenInfo() {
 			prinfo->ppid=(pcb->parent == 0) ? 0 : get_pid(pcb->parent); //ayto to kanoume gia tous pointers gt mporei na min deixnei se null an den yparxei
 			prinfo->alive=(pcb->pstate==ALIVE)? 1:0; //pairnei 1 gia alive 0 gia zombie, arxikopoioume mono an einai alive, ara 1
 			prinfo->thread_count=rlist_len(&pcb->ptcbs);
-			prinfo->main_task=PT[i].main_task;
+			prinfo->main_task=pcb->main_task;
 			prinfo->argl=pcb->argl;
 
 			for(int j=0; j<PROCINFO_MAX_ARGS_SIZE; j++){
@@ -358,7 +358,7 @@ Fid_t sys_OpenInfo() {
 
 
 			memcpy(&picb->BUFFER[picb->writer], prinfo, sizeof(procinfo));
-			picb->writer+=sizeof(procinfo);
+			picb->writer=picb->writer + sizeof(procinfo);
 
 		}
 	}
@@ -379,13 +379,13 @@ int system_info_read(void* pr_in_cb, char *array, unsigned int size){
 		picb->BUFFER[i]=array[j];
 		j++;
 	}
-	picb->reader += size;
+	picb->reader = picb->reader + size;
 
 	return j;
 }
 
 int  proc_info_close(void* prin){
-	procinfo* prinfo=(procinfo*)prin;
-	free(prinfo);
+	PICB* picb=(PICB*)pr_in_cb;
+	free(picb);
 	return 0;
 }
