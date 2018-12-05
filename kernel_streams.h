@@ -46,25 +46,6 @@ typedef struct file_control_block
   rlnode freelist_node;		/**< @brief Intrusive list node */
 } FCB;
 
-
-#define BUF_SIZE 8192
-
-typedef struct pipe_control_block{
-  char BUFFER [BUF_SIZE]; /**The Buffer itself*/
-
-  int w; /**Write index of buffer*/
-  int r; /**Read index of buffer*/
-
-  int w2;
-  int r2;
-
-  FCB* reader; /**Read End of the Pipe */
-  FCB* writer; /**Write End of the Pipe */
-
-  CondVar cv_reader; /** */
-  CondVar cv_writer; /** */
-} PIPECB;
-
 /**
   @brief Initialization for files and streams.
 

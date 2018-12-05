@@ -36,11 +36,17 @@ int sys_Pipe(pipe_t* pipe)
 			pipe->read=fid[0];
 			pipe->write=fid[1];
 
+			pipecb->rd=fid[0];
+			pipecb->wt=fid[1];
+
+
 			pipecb->reader=fcb[0];
 			pipecb->writer=fcb[1];
 
 			pipecb->cv_reader=COND_INIT;
 			pipecb->cv_writer=COND_INIT;
+
+			pipecb->pipe_mutex=MUTEX_INIT;
 
 			pipecb->w=0;
 			pipecb->r=0;
@@ -75,12 +81,13 @@ int rpipe_read(void* pipe, char *buf, unsigned int size){
 	int max=0;
 	while (read_bytes > 0 && read_size > 0) {	//i deyteri sinthiki einai gia an to read_bytes<read_size
 		/* code */
-		max = (read_size <= read_bytes)? read_size:read_bytes;	//epilegw ti megisti timi me tavani to read_size
+		max = (read_size <= read_bytes) ? read_size : read_bytes;	//epilegw ti megisti timi me tavani to read_size
 		for (int  i = 0; i < max; i++) {
 			/* code */
-			if (pipecb->r2 >= BUF_SIZE)
-				{pipecb->r2 = 0;
-				buf[i+step]= pipecb->BUFFER[pipecb->r2];}
+			if (pipecb->r2 >= BUF_SIZE){
+				pipecb->r2 = 0;
+				buf[i+step]= pipecb->BUFFER[pipecb->r2];
+			}
 			else{
 			buf[i+step]= pipecb->BUFFER[pipecb->r2];	//gt yparxei i periptwsi o writer na vazei px 60-60 ta chars ston buffer
 										    //epomemws thelw na xerw se poio simeio tou buffer vriskomai gt panwgrafei
@@ -89,8 +96,8 @@ int rpipe_read(void* pipe, char *buf, unsigned int size){
 			pipecb->r2++;
 		}
 		Cond_Broadcast(&pipecb->cv_writer);
-		read_size -=(max - 1);
-		step += (max - 1);
+		read_size =read_size -(max - 1);
+		step = step + (max - 1);
 		read_bytes = pipecb->w - pipecb->r;	//gia na dw an egrapse xana o writer
 
 	}
@@ -103,7 +110,7 @@ int wpipe_write(void* pipe, const char *buf, unsigned int size){
 	PIPECB* pipecb=(PIPECB*)pipe;
 
 	int write_bytes = BUF_SIZE-(pipecb->w - pipecb->r);
-	int write_size =size;
+	int write_size = size;
 	int step=0;
 	while(write_bytes==0){
 		Cond_Broadcast(&pipecb->cv_reader);
@@ -113,12 +120,12 @@ int wpipe_write(void* pipe, const char *buf, unsigned int size){
 	int max=0;
 	while (write_bytes > 0 && write_size > 0) {
 		/* code */
-		max = (write_size <= write_bytes)? write_size:write_bytes;
+		max = (write_size <= write_bytes) ? write_size : write_bytes;
 		for (int  i = 0; i < max; i++) {
 			/* code */
 			if (pipecb->w2 >= BUF_SIZE){
 				pipecb->w2 = 0;
-			pipecb->BUFFER[pipecb->w2]=buf[i+step];
+			//pipecb->BUFFER[pipecb->w2]=buf[i+step];
 }else{
 	pipecb->BUFFER[pipecb->w2]=buf[i+step];
 }
@@ -126,8 +133,8 @@ int wpipe_write(void* pipe, const char *buf, unsigned int size){
 			pipecb->w2++;
 		}
 		Cond_Broadcast(&pipecb->cv_reader);
-		write_size -= (max - 1);
-		step += (max - 1);
+		write_size = write_size - (max - 1);
+		step = step + (max - 1);
 		write_bytes = BUF_SIZE-(pipecb->w - pipecb->r);
 
 	}
@@ -142,12 +149,12 @@ int  rpipe_close(void* pipe){
 	if(pipecb->reader->refcount==0){
 
 		pipecb->reader=NULL;
+		pipecb->rd=-1;
 
 		if(pipecb->writer==NULL){
 			free(pipecb);
 			return 0;
 		}else{
-
 			Cond_Broadcast(&pipecb->cv_writer);
 			return 0;
 		}
@@ -162,12 +169,12 @@ int wpipe_close(void* pipe){
 	if(pipecb->writer->refcount==0){
 
 		pipecb->writer=NULL;
+		pipecb->wt=-1;
 
 		if(pipecb->reader==NULL){
 			free(pipecb);
 			return 0;
 		}else{
-
 			Cond_Broadcast(&pipecb->cv_reader);
 			return 0;
 		}

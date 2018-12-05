@@ -510,7 +510,29 @@ typedef struct pipe_s {
 	Fid_t write;		/**< The write end of the pipe */
 } pipe_t;
 
+typedef struct file_control_block FCB;
+#define BUF_SIZE 8192
 
+typedef struct pipe_control_block{
+  char BUFFER [BUF_SIZE]; /**The Buffer itself*/
+
+  int w; /**Write index of buffer*/
+  int r; /**Read index of buffer*/
+
+  int w2;
+  int r2;
+
+  Fid_t rd;
+  Fid_t wt;
+
+  Mutex pipe_mutex;
+
+  FCB* reader; /**Read End of the Pipe */
+  FCB* writer; /**Write End of the Pipe */
+
+  CondVar cv_reader; /** */
+  CondVar cv_writer; /** */
+} PIPECB;
 /**
 	@brief Construct and return a pipe.
 
@@ -529,7 +551,6 @@ typedef struct pipe_s {
 	@returns 0 on success, or -1 on error. Possible reasons for error:
 		- the available file ids for the process are exhausted.
 */
-typedef struct file_control_block FCB;
 
 int Pipe(pipe_t* pipe);
 
@@ -756,7 +777,7 @@ typedef struct proc_info_control_block {
 
   int writer;
   int reader;
-  char BUFFER[MAX_PROC*sizeof(procinfo)];
+  char BUFFER[MAX_PROC*sizeof(procinfo)+1];
 
 } PICB;
 

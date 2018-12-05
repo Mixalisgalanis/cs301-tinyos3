@@ -11,7 +11,6 @@
 #include <valgrind/valgrind.h>
 #endif
 
-
 /*
    The thread layout.
   --------------------
@@ -109,6 +108,7 @@ static void thread_start() {
 TCB *spawn_thread(PCB *pcb, void (*func)()) {
   /* The allocated thread size must be a multiple of page size */
   TCB *tcb = (TCB *)allocate_thread(THREAD_SIZE);
+
   /* Set the owner */
   tcb->owner_pcb = pcb;
 
@@ -276,7 +276,8 @@ static TCB *sched_queue_select() {
     }
   }
 
-  return sel == NULL ? NULL: sel->tcb; /* When the list is empty, this is NULL */
+  return sel == NULL ? NULL
+                     : sel->tcb; /* When the list is empty, this is NULL */
 }
 
 /*
@@ -434,14 +435,16 @@ void yield(enum SCHED_CAUSE cause) {
   next->prev = current;
 
   Mutex_Unlock(&sched_spinlock);
+
+  // Calculates new priority of the current thread
   sched_queue_evaluate(cause);
+
   /* Switch contexts */
   if (current != next) {
     CURTHREAD = next;
     cpu_swap_context(&current->context, &next->context);
   }
 
-  // Calculates new priority of the current thread
 
   // Increases priority and checks if priority threshold has been reached to
   // then apply the anti_starvation_policy
