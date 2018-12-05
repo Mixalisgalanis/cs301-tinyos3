@@ -385,7 +385,7 @@ int system_info_read(void* pr_in_cb, char *array, unsigned int size){
 }
 
 int  proc_info_close(void* prin){
-	PICB* picb=(PICB*)pr_in_cb;
+	PICB* picb=(PICB*)prin;
 	free(picb);
 	return 0;
 }

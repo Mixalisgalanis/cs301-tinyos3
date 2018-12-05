@@ -85,7 +85,7 @@ int rpipe_read(void* pipe, char *buf, unsigned int size){
 			/* code */
 			if (pipecb->r2 >= BUF_SIZE){
 				pipecb->r2 = 0;
-				buf[i+step]= pipecb->BUFFER[pipecb->r2];
+				//buf[i+step]= pipecb->BUFFER[pipecb->r2];
 			}
 			else{
 			buf[i+step]= pipecb->BUFFER[pipecb->r2];	//gt yparxei i periptwsi o writer na vazei px 60-60 ta chars ston buffer

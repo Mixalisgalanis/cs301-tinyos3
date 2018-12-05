@@ -49,7 +49,7 @@ int test_boot_boot(int argl, void* args) {
 	return 0;
 }
 
-BARE_TEST(test_boot, 
+BARE_TEST(test_boot,
 	"Test that the boot(...) function initializes the VM\n"
 	"and passes arguments to the init task correctly.")
 {
@@ -89,7 +89,7 @@ BARE_TEST(test_boot,
  */
 
 
-BOOT_TEST(test_pid_of_init_is_one, 
+BOOT_TEST(test_pid_of_init_is_one,
 	"Test that the pid of the init task is 1. This may\n"
 	"not be according to spec, but this is something\n"
 	"we will correct in the next update."
@@ -112,7 +112,7 @@ BOOT_TEST(test_waitchild_error_on_invalid_pid,
 		ASSERT(WaitChild(MAX_PROC, NULL)==NOPROC);
 		ASSERT(WaitChild(GetPid()+1, NULL)==NOPROC);
 	}
-	int subprocess(int argl, void* args) 
+	int subprocess(int argl, void* args)
 	{
 		ASSERT(GetPid()!=1);
 		waitchild_error();
@@ -152,7 +152,7 @@ struct test_pid_rec {
 };
 
 
-BOOT_TEST(test_exec_getpid_wait, 
+BOOT_TEST(test_exec_getpid_wait,
 	"Test that Exec returns the same pid as the child sees\n"
 	"by calling GetPid(). Also, that WaitChild with a given pid\n"
 	"returns the correct status.",
@@ -214,7 +214,7 @@ BOOT_TEST(test_exec_copies_arguments,
 }
 
 
-BOOT_TEST(test_wait_for_any_child, 
+BOOT_TEST(test_wait_for_any_child,
 	"Test WaitChild when called to wait on any child."
 	)
 {
@@ -248,7 +248,7 @@ BOOT_TEST(test_wait_for_any_child,
 
 			/* try to find cpid in array */
 			int j;
-			for(j=0; j<NCHILDREN;j++) 
+			for(j=0; j<NCHILDREN;j++)
 				if(rec[j].pid == cpid) break;
 			ASSERT(j < NCHILDREN);
 			rec[j].pid = NOPROC;  /* Reset it so we don't find it again! */
@@ -325,11 +325,11 @@ BOOT_TEST(test_orphans_adopted_by_init,
 	/* Now wait for 18 children (3 child + 15 grandchild) */
 	int sum = 0;
 	for(int i=0;i<18;i++) {
-		int status;		
+		int status;
 		ASSERT(WaitChild(NOPROC, &status) != NOPROC);
 		sum += status;
 	}
-	
+
 
 	/* Check that we have no more */
 	ASSERT(WaitChild(NOPROC, NULL) == NOPROC);
@@ -356,7 +356,7 @@ BOOT_TEST(test_orphans_adopted_by_init,
 	Test that a timed wait on a condition variable terminates after the timeout.
  */
 
-BOOT_TEST(test_cond_timedwait_timeout, 
+BOOT_TEST(test_cond_timedwait_timeout,
 	"Test that timed waits on a condition variable terminate without blocking after the timeout."
 	)
 {
@@ -395,7 +395,7 @@ BOOT_TEST(test_cond_timedwait_timeout,
 		Exec(do_timeout, sizeof(t), &t);
 	}
 
-	/* 
+	/*
 		Wait all child processes, before leaving the current stack frame!
 		Else, the local functions may cause a crash!
 	*/
@@ -516,7 +516,7 @@ BOOT_TEST(test_dup2_error_on_invalid_fid,
 	Fid_t fid = OpenNull(0);
 	assert(fid!=NOFILE);
 	ASSERT(Dup2(fid, NOFILE)==-1);
-	ASSERT(Dup2(fid, MAX_FILEID)==-1);		
+	ASSERT(Dup2(fid, MAX_FILEID)==-1);
 	return 0;
 }
 
@@ -564,8 +564,8 @@ BOOT_TEST(test_close_terminals,
 	}
 	for(uint i=0; i<GetTerminalDevices(); i++) {
 		ASSERT(Close(term[i])==0);
-	}	
-	return 0;	
+	}
+	return 0;
 }
 
 
@@ -615,7 +615,7 @@ BOOT_TEST(test_read_kbd_big,
 	/* Read 16kb bytes at a time */
 	char buffer[16384];
 	uint count = 0;
-	uint total = 1<<20;	
+	uint total = 1<<20;
 	while(count < total)
 	{
 		int remain = total-count;
@@ -639,7 +639,7 @@ BOOT_TEST(test_dup2_copies_file,
 
 	if(fterm!=0) {
 		ASSERT(Dup2(fterm, 0)==0);
-		Close(fterm);		
+		Close(fterm);
 	}
 
 	sendme(0, "zavarakatranemia");
@@ -865,7 +865,7 @@ BOOT_TEST(test_write_to_many_terminals,
 
 
 
-TEST_SUITE(basic_tests, 
+TEST_SUITE(basic_tests,
 	"A suite of basic tests, focusing on the functional behaviour of the\n"
 	"tinyos3 API, but not the operational (concurrency and I/O multiplexing)."
 	)
@@ -970,7 +970,7 @@ BOOT_TEST(test_exit_many_threads,
 
 
 
-TEST_SUITE(thread_tests, 
+TEST_SUITE(thread_tests,
 	"A suite of tests for threads."
 	)
 {
@@ -1002,7 +1002,7 @@ BOOT_TEST(test_pipe_open,
 	)
 {
 	pipe_t pipe;
-	ASSERT(Pipe(&pipe)==0);	
+	ASSERT(Pipe(&pipe)==0);
 	int rc;
 
 	for(int i=0;i<3;i++) {
@@ -1025,7 +1025,7 @@ BOOT_TEST(test_pipe_fails_on_exhausted_fid,
 	for(uint i=0; i< (MAX_FILEID/2); i++ )
 		ASSERT(Pipe(&pipe)==0);
 	for(uint i=0; i< (MAX_FILEID/2); i++ )
-		ASSERT(Pipe(&pipe)==-1);	
+		ASSERT(Pipe(&pipe)==-1);
 	return 0;
 }
 
@@ -1036,7 +1036,7 @@ BOOT_TEST(test_pipe_close_reader,
 	)
 {
 	pipe_t pipe;
-	ASSERT(Pipe(&pipe)==0);	
+	ASSERT(Pipe(&pipe)==0);
 	int rc;
 
 	for(int i=0;i<3;i++) {
@@ -1054,7 +1054,7 @@ BOOT_TEST(test_pipe_close_writer,
 	)
 {
 	pipe_t pipe;
-	ASSERT(Pipe(&pipe)==0);	
+	ASSERT(Pipe(&pipe)==0);
 	int rc;
 
 	for(int i=0;i<3;i++) {
@@ -1097,7 +1097,7 @@ int data_producer(int argl, void* args)
 
 /* Takes one integer argument. Reads its standard input to exhaustion,
    asserts it read that many bytes. */
-int data_consumer(int argl, void* args) 
+int data_consumer(int argl, void* args)
 {
 	assert(argl == sizeof(int));
 	int nbytes = *(int*)args;
@@ -1122,7 +1122,7 @@ BOOT_TEST(test_pipe_single_producer,
 	)
 {
 	pipe_t pipe;
-	ASSERT(Pipe(&pipe)==0);	
+	ASSERT(Pipe(&pipe)==0);
 
 	/* First, make pipe.read be zero. We cannot just Dup, because we may close pipe.write */
 	if(pipe.read != 0) {
@@ -1158,7 +1158,7 @@ BOOT_TEST(test_pipe_multi_producer,
 	)
 {
 	pipe_t pipe;
-	ASSERT(Pipe(&pipe)==0);	
+	ASSERT(Pipe(&pipe)==0);
 
 	/* First, make pipe.read be zero. We cannot just Dup, because we may close pipe.write */
 	if(pipe.read != 0) {
@@ -1270,7 +1270,7 @@ BOOT_TEST(test_socket_constructor_out_of_fids,
 	for(int i=0;i<MAX_FILEID;i++)
 		ASSERT(Socket(100)!=NOFILE);
 	for(int i=0;i<MAX_FILEID;i++)
-		ASSERT(Socket(100)==NOFILE);	
+		ASSERT(Socket(100)==NOFILE);
 	return 0;
 }
 
@@ -1283,9 +1283,9 @@ BOOT_TEST(test_socket_constructor_illegal_port,
 	ASSERT(Socket(MAX_PORT)!=NOFILE);
 
 	ASSERT(Socket(NOPORT-1)==NOFILE);
-	ASSERT(Socket(MAX_PORT+1)==NOFILE);	
+	ASSERT(Socket(MAX_PORT+1)==NOFILE);
 	ASSERT(Socket(MAX_PORT+10)==NOFILE);
-	return 0;	
+	return 0;
 }
 
 BOOT_TEST(test_listen_success,
@@ -1303,7 +1303,7 @@ BOOT_TEST(test_listen_fails_on_bad_fid,
 	ASSERT(Listen(7)==-1);
 	ASSERT(Listen(OpenNull())==-1);
 	ASSERT(Listen(NOFILE)==-1);
-	ASSERT(Listen(MAX_FILEID)==-1);	
+	ASSERT(Listen(MAX_FILEID)==-1);
 	return 0;
 }
 
@@ -1323,7 +1323,7 @@ BOOT_TEST(test_listen_fails_on_occupied_port,
 	ASSERT(Listen(f)==0);
 	ASSERT(Listen(Socket(100))==-1);
 	Close(f);
-	ASSERT(Listen(Socket(100))==0);	
+	ASSERT(Listen(Socket(100))==0);
 	return 0;
 }
 
@@ -1332,8 +1332,8 @@ BOOT_TEST(test_listen_fails_on_initialized_socket,
 	)
 {
 	Fid_t lsock = Socket(100);
-	ASSERT(Listen(lsock)==0);	
-	ASSERT(Listen(lsock)==-1);	
+	ASSERT(Listen(lsock)==0);
+	ASSERT(Listen(lsock)==-1);
 	Fid_t sock[2];
 	sock[0] = Socket(200);
 	connect_sockets(sock[0], lsock, sock+1, 100);
@@ -1363,7 +1363,7 @@ BOOT_TEST(test_accept_fails_on_bad_fid,
 	ASSERT(Accept(OpenNull())==-1);
 	ASSERT(Accept(NOFILE)==-1);
 	ASSERT(Accept(MAX_FILEID)==-1);
-	
+
 	return 0;
 }
 
@@ -1384,7 +1384,7 @@ BOOT_TEST(test_accept_fails_on_connected_socket,
 	Fid_t cli = Socket(NOPORT);
 	Fid_t srv;
 	connect_sockets(cli, lsock, &srv, 100);
-	ASSERT(Accept(srv)==-1);		
+	ASSERT(Accept(srv)==-1);
 	return 0;
 }
 
@@ -1426,7 +1426,7 @@ BOOT_TEST(test_accept_fails_on_exhausted_fid,
 	if( (MAX_FILEID & 1) == 1 )  OpenNull();
 
 	/* Allocate pairs of fids */
-	for(uint i=0;i< (MAX_FILEID-1)/2 ; i++) {		
+	for(uint i=0;i< (MAX_FILEID-1)/2 ; i++) {
 		Fid_t cli = Socket(NOPORT);
 		Fid_t srv;
 		ASSERT(cli != NOFILE);
@@ -1559,7 +1559,7 @@ BOOT_TEST(test_socket_small_transfer,
 	connect_sockets(sock[0], lsock, sock+1, 100);
 	for(uint i=0; i< 32768; i++) {
 		check_transfer(sock[0], sock[1]);
-		check_transfer(sock[1], sock[0]);		
+		check_transfer(sock[1], sock[0]);
 	}
 
 	return 0;
@@ -1737,7 +1737,7 @@ TEST_SUITE(socket_tests,
 	&test_socket_constructor_many_per_port,
 	&test_socket_constructor_out_of_fids,
 	&test_socket_constructor_illegal_port,
-	
+
 	&test_listen_success,
 	&test_listen_fails_on_bad_fid,
 	&test_listen_fails_on_NOPORT,
@@ -1789,7 +1789,7 @@ unsigned int timestamp=0;
 
 unsigned int get_timestamp()
 {
-	return __atomic_fetch_add(&timestamp, 1, __ATOMIC_SEQ_CST);	
+	return __atomic_fetch_add(&timestamp, 1, __ATOMIC_SEQ_CST);
 }
 
 
@@ -1803,7 +1803,7 @@ BOOT_TEST(test_multitask,
 		unsigned int f = fibo(38);
 		tschild = get_timestamp();
 		return f>10;
-	}	
+	}
 
 	Exec(child, 0, NULL);
 	unsigned int ts = get_timestamp();
@@ -1908,7 +1908,7 @@ BARE_TEST(test_parallelism,
 			boot(ncores, 0, run_twice, 0, NULL);
 			if(I==0)
 				minTrun = Trun;
-			else 
+			else
 				if(Trun < minTrun) minTrun = Trun;
 		}
 		return minTrun;
@@ -1923,8 +1923,8 @@ BARE_TEST(test_parallelism,
 	double T2 = run_times(10, 2);
 
 	MSG("1-core: %f   2-core: %f\n", T1, T2);
-	ASSERT_MSG( fabs(T1/T2  - 2.0) < 0.4, 
-		"Runtimes did not decrease enough. one core: %f sec    two cores: %f sec\n", 
+	ASSERT_MSG( fabs(T1/T2  - 2.0) < 0.4,
+		"Runtimes did not decrease enough. one core: %f sec    two cores: %f sec\n",
 		T1, T2);
 }
 
@@ -2041,7 +2041,7 @@ BOOT_TEST(test_term_input_driver_interrupt,
 		for(int i=0; i< nioproc; i++)
 			ASSERT(Exec(input_char, 0, NULL)!=NOPROC);
 
-		/* If the readers are polling as the compute task runs, 
+		/* If the readers are polling as the compute task runs,
 		   this will take a long time! */
 		run_times(10);
 
@@ -2060,7 +2060,7 @@ BOOT_TEST(test_term_input_driver_interrupt,
 	ASSERT(fid!=NOFILE);
 	if(fid!=0) {
 		ASSERT(Dup2(fid,0)==0);
-		ASSERT(Close(fid)==0);		
+		ASSERT(Close(fid)==0);
 	}
 
 	run_with_io(1000);
@@ -2136,7 +2136,7 @@ BARE_TEST(dummy_user_test,
 }
 
 
-TEST_SUITE(user_tests, 
+TEST_SUITE(user_tests,
 	"These are tests defined by the user."
 	)
 {
@@ -2154,6 +2154,3 @@ int main(int argc, char** argv)
 	register_test(&user_tests);
 	return run_program(argc, argv, &all_tests);
 }
-
-
-
