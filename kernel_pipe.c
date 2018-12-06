@@ -32,8 +32,6 @@ int sys_Pipe(pipe_t *pipe) {
     pipecb->cv_reader = COND_INIT;
     pipecb->cv_writer = COND_INIT;
 
-    pipecb->pipe_mutex = MUTEX_INIT;
-
     pipecb->reader->streamobj = pipecb;
     pipecb->writer->streamobj = pipecb;
 

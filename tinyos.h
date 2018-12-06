@@ -525,8 +525,6 @@ typedef struct pipe_control_block{
   Fid_t rd;
   Fid_t wt;
 
-  Mutex pipe_mutex;
-
   FCB* reader; /**Read End of the Pipe */
   FCB* writer; /**Write End of the Pipe */
 
