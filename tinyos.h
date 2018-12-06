@@ -775,7 +775,7 @@ typedef struct proc_info_control_block {
 
   int writer;
   int reader;
-  char BUFFER[MAX_PROC*sizeof(procinfo)+1];
+  char BUFFER[MAX_PROC*sizeof(procinfo)];
 
 } PICB;
 
