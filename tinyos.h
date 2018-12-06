@@ -511,10 +511,10 @@ typedef struct pipe_s {
 } pipe_t;
 
 typedef struct file_control_block FCB;
-#define BUF_SIZE 8192
+#define BUF_SIZE 16384
 
 typedef struct pipe_control_block{
-  char BUFFER [BUF_SIZE]; /**The Buffer itself*/
+  char buffer [BUF_SIZE]; /**The Buffer itself*/
 
   int w; /**Write index of buffer*/
   int r; /**Read index of buffer*/
@@ -557,7 +557,7 @@ int Pipe(pipe_t* pipe);
 int rpipe_read(void* pipe, char *buf, unsigned int size);
 int wpipe_write(void* pipe, const char *buf, unsigned int size);
 int rpipe_close(void* pipe);
-int  wpipe_close(void* pipe);
+int wpipe_close(void* pipe);
 
 /*******************************************
  *
