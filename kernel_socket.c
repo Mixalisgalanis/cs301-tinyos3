@@ -4,7 +4,29 @@
 
 Fid_t sys_Socket(port_t port)
 {
-	return NOFILE;
+	if(port<0 || port>MAX_PORT){
+		return NOFILE;
+	}
+
+	FCB* fcb;
+	Fid_t fid;
+
+	if(FCB_reserve(1,&fid,&fcb)==1){
+		SCB* scb = (SCB*)xmalloc(sizeof(SCB));
+
+		scb->fcb=fcb;
+		scb->fid=fid;
+		scb->type=-1;
+		scb->port=port;
+		scb->fcb->streamobj=scb;
+		scb->fcb->streamfunc=&socket_fops;
+		return fid;
+
+
+	}else{
+		return NOFILE;
+	}
+
 }
 
 int sys_Listen(Fid_t sock)

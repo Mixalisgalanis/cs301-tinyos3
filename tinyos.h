@@ -583,6 +583,24 @@ typedef int16_t port_t;
 */
 #define NOPORT ((port_t)0)
 
+typedef struct socket_control_block{
+
+
+    FCB* fcb;
+    int type;
+    port_t port;
+    Fid_t fid; //extra metavliti
+
+    union {
+        listener* listener_node;
+        peer* peer_node;
+    }
+
+}SCB;
+
+SCB* Port_map[MAX_PORT+1];
+
+
 
 /**
 	@brief Return a new socket bound on a port.
