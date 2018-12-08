@@ -3,6 +3,7 @@
 #define __TINYOS_H__
 
 #include <stdint.h>
+#include "util.h"
 
 /**
   @file tinyos.h
@@ -584,22 +585,49 @@ typedef int16_t port_t;
 */
 #define NOPORT ((port_t)0)
 
+
+typedef enum{
+    UNBOUND,
+    PEER,
+    LISTENER
+} s_type;
+
+typedef struct socket_control_block SCB;
+typedef struct listener_control_block LICB;
+typedef struct peer_control_block PECB;
+SCB* port_map[MAX_PORT+1];
+
 typedef struct socket_control_block{
-
-
     FCB* fcb;
-    int type;
+    s_type type;
     port_t port;
-    Fid_t fid; //extra metavliti
+    Fid_t fid;
 
     union {
-        listener* listener_node;
-        peer* peer_node;
-    }
-
+        LICB* listener_cb; //Listener Control Block
+        PECB* peer_cb; //Peer Control Clock
+    };
 }SCB;
 
-SCB* Port_map[MAX_PORT+1];
+typedef struct listener_control_block{
+    rlnode queue;
+    CondVar req_available;
+} LICB;
+
+typedef struct peer_control_block{
+    PIPECB* sender;
+    PIPECB* receiver;
+    SCB* peer_to_peer;
+} PECB;
+
+/*File Ops Functions*/
+int unbound_close(void* scb_arg);
+int listener_close(void* scb_arg);
+int peer_read(void* scb_arg, char* buf, unsigned int size);
+int peer_write(void* scb_arg, const char* buf, unsigned int size);
+int peer_close(void* scb_arg);
+
+
 
 
 
