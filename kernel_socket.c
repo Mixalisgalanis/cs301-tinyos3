@@ -2,6 +2,13 @@
 #include "tinyos.h"
 #define FCB_SOCKETS 1
 
+file_ops socket_file_ops = {
+	.Open = NULL,
+	.Read = socket_read,
+	.Write = socket_write,
+	.Close = socket_close
+};
+
 Fid_t sys_Socket(port_t port)
 {
 	if(port<0 || port>MAX_PORT){
@@ -11,7 +18,7 @@ Fid_t sys_Socket(port_t port)
 	FCB* fcb;
 	Fid_t fid;
 
-	if(FCB_reserve(1,&fid,&fcb)==1){
+	if(FCB_reserve(FCB_SOCKETS,&fid,&fcb)==1){
 		SCB* scb = (SCB*)xmalloc(sizeof(SCB));
 
 		scb->fcb=fcb;
@@ -21,7 +28,6 @@ Fid_t sys_Socket(port_t port)
 		scb->fcb->streamobj=scb;
 		scb->fcb->streamfunc=&socket_fops;
 		return fid;
-
 
 	}else{
 		return NOFILE;

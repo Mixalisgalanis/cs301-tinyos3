@@ -566,16 +566,6 @@ int wpipe_close(void *pipe);
  *
  *******************************************/
 
-typedef struct socket_control_block{
-    FCB* fcb;
-    Fid_t fid;
-    socket_type s_type;
-    port_t port;
-    listener* listener;
-    peer* peer;
-
-}SCB;
-
 
 /**
 	@brief A type for socket ports.
