@@ -602,6 +602,7 @@ typedef struct socket_control_block{
     s_type type;
     port_t port;
     Fid_t fid;
+    unsigned int counter;
 
     union {
         LICB* listener_cb; //Listener Control Block
@@ -615,10 +616,16 @@ typedef struct listener_control_block{
 } LICB;
 
 typedef struct peer_control_block{
-    PIPECB* sender;
-    PIPECB* receiver;
+    PIPECB* sender; //writer
+    PIPECB* receiver; //reader
     SCB* peer_to_peer;
 } PECB;
+
+typedef struct request_control_block{
+    SCB* scb;
+    rlnode req_node;
+    CondVar request_cv;
+} REQ;
 
 /*File Ops Functions*/
 int unbound_close(void* scb_arg);
@@ -765,7 +772,7 @@ typedef enum {
    @returns 0 on success and -1 on error. Possible reasons for error:
        - the file id @c sock is not legal (a connected socket stream).
 */
-int ShutDown(Fid_t sock, shutdown_mode how);
+int ShutDown(Fid_t sock, shutdown_mode mode);
 
 
 
