@@ -80,8 +80,6 @@ Fid_t sys_Accept(Fid_t sock) {
     if (listener_scb->type != LISTENER)
         return NOFILE;
 
-    if (check(sock) == NULL) return NOFILE;
-
     if (rlist_len(&listener_scb->listener_cb->queue) == 0)
         kernel_wait(&listener_scb->listener_cb->req_available, SCHED_USER);
 
